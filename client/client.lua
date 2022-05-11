@@ -11,7 +11,7 @@ function Missions:Init(id)
 	if Config.Missions[id] then
 		self.id = id
 	end
-
+	self.State = "" -- Lets use a callback to get the state please!!!
 	self.SID = GetPlayerServerId(PlayerId())
 	self.cid = QBCore.Functions.GetPlayerData().citizenid
 	self.MissionID = Config.Missions[id]
@@ -27,7 +27,6 @@ function Missions:Init(id)
 	Missions:SpawnHandler()
 	Missions:SpawnVehicle()
 	Missions:UpdateValue({state = "Inicio",vehicle = self.Vehicle,cid = self.cid,src = self.SID})
-
 	return self
 end
 
@@ -37,6 +36,12 @@ end
 function Missions:UpdateMissionState(state,value)
 	TriggerServerEvent("jerico-missions:server:UpdateMission",state,value)
 end
+function Missions:UpdateState()
+	QBCore.Functions.TriggerCallback("jerico-missions:server:GetState",function(state) 
+			self.State = state
+	end,self.cid)
+end
+
 function Missions:CreateBlips()
 	if self.MissionID.HAS_BLIP then
 		self.blip = addBlip(self.MissionID.BLIP_INFO.BLIP_COORDINATE, self.MissionID.NAME)

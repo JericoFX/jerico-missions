@@ -18,11 +18,12 @@ RegisterServerEvent("jerico-missions:server:UpdateValue", function(data)
 end)
 RegisterServerEvent("jerico-missions:server:UpdateMission", function(state, value)
 	local src = source
-	if not MissionTrack[state] then
+	local P = QBCore.Function.GetPlayer(src)
+	if not MissionTrack[P.PlayerData.citizenid].state then
 		log("ERROR STATE NOT REGISTERED")
 		return
 	end
-	MissionTrack[state] = value
+	MissionTrack[P.PlayerData.citizenid][state] = value
 end)
 
 QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, vehicle, vehiclepos)

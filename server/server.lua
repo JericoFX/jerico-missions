@@ -1,5 +1,28 @@
 local QBCore = exports["qb-core"]:GetCoreObject()
 local Data = { Veh = {} }
+local MissionTrack = {}
+local Cache = {}
+function log(text)
+	print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
+end
+
+RegisterServerEvent("jerico-missions:server:UpdateValue", function(data)
+	local src = source
+	for k, v in pairs(data) do
+		if not MissionTrack[k] then
+			MissionTrack[k] = v
+		end
+	end
+end)
+RegisterServerEvent("jerico-missions:server:UpdateMission", function(state, value)
+	local src = source
+	if not MissionTrack[state] then
+		log("ERROR STATE NOT REGISTERED")
+		return
+	end
+	MissionTrack[state] = value
+end)
+
 QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, vehicle, vehiclepos)
 	Data.Veh.VehicleID = CreateVehicle(vehicle, vehiclepos.x, vehiclepos.y, vehiclepos.z, 180, true, true)
 

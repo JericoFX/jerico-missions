@@ -8,6 +8,10 @@ local NPC
 
 function Missions:Init(id)
 	self.__index = self
+	if Config.Missions[id] then
+		self.id = id
+	end
+
 	self.SID = GetPlayerServerId(PlayerId())
 	self.cid = QBCore.Functions.GetPlayerData().citizenid
 	self.MissionID = Config.Missions[id]
@@ -15,23 +19,24 @@ function Missions:Init(id)
 	self.blip = 0
 	self.Vehicle = { ID = 0, Plate = "" }
 	self.NPC = {}
-	self.NPC_MISSION = self.MissionID.FIXED.NPC_MISSION
+	self.NPC_MISSION = NPC
 	self.EndMission = { Zone = nil, IsInside = false }
-	Missions:CreateBlips()
-	Missions:SpawnPeds()
+	Missions:CreateBlips() -- Create the blips for the selected mission
+	Missions:SpawnPeds() -- Spawn the peds
 	---
 	Missions:SpawnHandler()
 	Missions:SpawnVehicle()
+	Missions:UpdateValue({state = "Inicio",vehicle = self.Vehicle,cid = self.cid,src = self.SID})
 
 	return self
 end
 
-function Missions:UpdateValue(id)
-	if self.MissionID then
-		TriggerServerEvent("jerico-missions:server:UpdateValue", self.cid, id)
-	end
+function Missions:UpdateValue(state)
+		TriggerServerEvent("jerico-missions:server:UpdateValue",state)
 end
-
+function Missions:UpdateMissionState(state,value)
+	TriggerServerEvent("jerico-missions:server:UpdateMission",state,value)
+end
 function Missions:CreateBlips()
 	if self.MissionID.HAS_BLIP then
 		self.blip = addBlip(self.MissionID.BLIP_INFO.BLIP_COORDINATE, self.MissionID.NAME)

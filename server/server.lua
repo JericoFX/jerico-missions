@@ -8,9 +8,11 @@ end
 
 RegisterServerEvent("jerico-missions:server:UpdateValue", function(data)
 	local src = source
+	local P = QBCore.Function.GetPlayer(src)
+		
 	for k, v in pairs(data) do
-		if not MissionTrack[k] then
-			MissionTrack[k] = v
+		if not MissionTrack[P.PlayerData.citizenid] then
+			MissionTrack[P.PlayerData.citizenid] = v
 		end
 	end
 end)
@@ -39,6 +41,12 @@ end)
 
 RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, sid)
 	TriggerClientEvent("jerico-missions:server:AddItemsInVehicle", source, cid, sid)
+end)
+
+QBCore.Functions.CreateCallback("jerico-missions:server:GetState",function(source,cb,cid) 
+	if MissionTrack[cid] then
+		cb(MissionTrack[cid].state)	
+	end
 end)
 
 -- QBCore.Functions.CreateCallback("jerico-missions:server:SpawnPeds", function(source, cb, npc)

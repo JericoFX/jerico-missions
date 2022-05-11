@@ -19,7 +19,7 @@ end)
 RegisterServerEvent("jerico-missions:server:UpdateMission", function(state, value)
 	local src = source
 	local P = QBCore.Function.GetPlayer(src)
-	if not MissionTrack[P.PlayerData.citizenid].state then
+	if not MissionTrack[P.PlayerData.citizenid][state] then
 		log("ERROR STATE NOT REGISTERED")
 		return
 	end

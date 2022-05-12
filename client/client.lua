@@ -8,6 +8,8 @@ local NPC
 
 function Missions:Init(id)
 	self.__index = self
+local	p = promise.new()
+
 	if Config.Missions[id] then
 		self.id = id
 	end
@@ -18,13 +20,16 @@ function Missions:Init(id)
 	self.MissionID.TAKED = true
 	self.blip = 0
 	self.Vehicle = { ID = 0, Plate = "" }
-	self.NPC = {}
+	self.NPC = {source = 0, ID = 0,hash = 0 }
 	self.NPC_MISSION = NPC
 	self.EndMission = { Zone = nil, IsInside = false }
+
+
 	Missions:CreateBlips() -- Create the blips for the selected mission
-	Missions:SpawnPeds() -- Spawn the peds
+
 	---
-	Missions:SpawnHandler()
+	Missions:SpawnPeds()
+	--Missions:SpawnHandler()
 	Missions:SpawnVehicle()
 	Missions:UpdateValue({state = "Inicio",vehicle = self.Vehicle,cid = self.cid,src = self.SID})
 	return self
@@ -47,31 +52,6 @@ function Missions:CreateBlips()
 		self.blip = addBlip(self.MissionID.BLIP_INFO.BLIP_COORDINATE, self.MissionID.NAME)
 	end
 end
-
-function Missions:SpawnHandler()
-		QBCore.Functions.LoadModel(self.MissionID.FIXED.NPC_MISSION[1].name)
-		self.NPC_MISSION = CreatePed(
-			1,
-			self.MissionID.FIXED.NPC_MISSION[1].name,
-			self.MissionID.FIXED.NPC_MISSION[1].coords.x,
-			self.MissionID.FIXED.NPC_MISSION[1].coords.y,
-			self.MissionID.FIXED.NPC_MISSION[1].coords.z,
-			self.MissionID.FIXED.NPC_MISSION[1].coords.w,
-			true,
-			false
-		)
-		exports["qb-target"]:AddTargetEntity(self.NPC_MISSION, {
-			options = {
-				{
-					type = "client",
-					event = "openMenu",
-					icon = "fas fa-box-circle-check",
-					label = "Comprar Drogas",
-				},
-			},
-			distance = 3.0,
-		})
-end
 CreateThread(function() 
 	QBCore.Functions.LoadModel("s_m_m_autoshop_02")
 	NPC = CreatePed(
@@ -92,36 +72,10 @@ CreateThread(function()
 		},
 		distance = 3.0,
 	})
+	BlockPedDeadBodyShockingEvents(NPC,true)
+	SetBlockingOfNonTemporaryEvents(NPC,true)
 end)
-RegisterCommand("goto",function(source) 
-	local coo = vector3(1072.41, 3037.8, 41.29)
-	local closeVeh,closeDist = QBCore.Functions.GetClosestVehicle()
 
-	local min,max = GetModelDimensions(GetEntityModel(closeVeh))
-	TaskGoStraightToCoord(NPC,GetWorldPositionOfEntityBone(closeVeh,GetEntityBoneIndexByName(closeVeh,"door_pside_r")),1.5,-1,180,0.5)
-
-while #(GetEntityCoords(NPC)-GetWorldPositionOfEntityBone(closeVeh,GetEntityBoneIndexByName(closeVeh,"door_pside_r")) ) > 2 do
-	print "far"
-	Wait(500)
-end
-
---
-print("DOne")
-RequestAnimDict("amb@world_human_welding@male@idle_a")
-while not HasAnimDictLoaded("amb@world_human_welding@male@idle_a") do
-	Citizen.Wait(10)
-end
-Wait(500)
-TaskLookAtEntity(NPC,closeVeh,-1,2048,3)
-
-TaskStartScenarioInPlace(NPC,"WORLD_HUMAN_WELDING",0,true)
---TaskPlayAnim(NPC,"amb@world_human_welding@male@idle_a","welding_base_dockworker", 5.0, -5, -1, 16, false, false, false, false)
-Wait(2000)
-ClearPedTasks(NPC)
---SetVehicleDoorBroken(closeVeh,3,false)
-SetVehicleDoorsLocked(closeVeh,1)
-TaskGoStraightToCoord(NPC,vector3(1058.85, 3035.84, 41.72),1.5,-1, 289.57,0.5)
-end)
 RegisterNetEvent("openMenu",function() 
 	local Data = {}
 	for k,v in ipairs(Config.Missions) do
@@ -159,7 +113,15 @@ if Config.Missions[data.id] then
 	end)
 end
 end)
-
+CreateThread(function() 
+	CreateThread(function()
+		p = promise.new()
+		Mision = Missions:Init(1)
+		p:resolve(Mision)
+		Citizen.Await(p)
+		chance = math.random(num,3)
+	end)
+end)
 RegisterCommand("om",function(source) 
 TriggerEvent("openMenu")
 
@@ -177,44 +139,45 @@ end
 
 function Missions:SpawnPeds()
 		local Player = PlayerPedId()
-			local Data = {}
-			for k,v in pairs(self.MissionID.FIXED.NPC) do
-				RequestModel(k)
-				while not HasModelLoaded(k) do
-					Wait(0)
-				end
-				Wait(200)
-				local newPed = CreatePed(1,k,v.x,v.y,v.z,v.w,true,false)
-				SetEntityAsMissionEntity(newPed, true, true)
-				NetworkRegisterEntityAsNetworked(newPed)
-				local netID = PedToNet(newPed)
-				NetworkSetNetworkIdDynamic(netID, false)
-				SetNetworkIdCanMigrate(netID, true)
-				SetNetworkIdExistsOnAllMachines(netID, true)
+		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnPeds",function(n)
+			if #n > 0 then
+			self.NPC = n
+			for k,v in ipairs(self.NPC) do
+				local el = self.NPC[k]
+				local src = NetToPed(el.ID)
+				print(src)
+				-- Wait(200)
+				-- local newPed = CreatePed(1,k,v.x,v.y,v.z,v.w,true,false)
+				-- SetEntityAsMissionEntity(newPed, true, true)
+				-- NetworkRegisterEntityAsNetworked(newPed)
+				-- local netID = PedToNet(newPed)
+				-- NetworkSetNetworkIdDynamic(netID, false)
+				-- SetNetworkIdCanMigrate(netID, true)
+				-- SetNetworkIdExistsOnAllMachines(netID, true)
 				local _, grouphash = AddRelationshipGroup("HATE_PLAYER")
-				local _, grouphash2 = AddRelationshipGroup("FRIENDS_NPC")
-				SetPedRelationshipGroupHash(newPed, grouphash2)
-				GiveWeaponToPed(newPed,`WEAPON_SMG`,250,false,true)
+				 local _, grouphash2 = AddRelationshipGroup("FRIENDS_NPC")
+				SetPedRelationshipGroupHash(src, grouphash2)
+				GiveWeaponToPed(src,`WEAPON_SMG`,250,false,true)
 				SetPedRelationshipGroupHash(Player, grouphash)
 				SetRelationshipBetweenGroups(5, grouphash2, grouphash)
-				SetEntityCanBeDamagedByRelationshipGroup(newPed, true, grouphash)
-				SetPedFleeAttributes(newPed, 0, false)
-				SetPedCombatAttributes(newPed, 46, 1)
-				SetPedCombatAbility(newPed, 100)
-				SetPedCombatMovement(newPed, 2)
-				SetPedCombatRange(newPed, 3)
-				SetPedKeepTask(newPed, true)
-				SetPedDropsWeaponsWhenDead(newPed, false)
-				SetPedArmour(newPed, 100)
-				SetPedAccuracy(newPed, 60)
-				SetEntityInvincible(newPed, false)
-				SetPedAlertness(newPed, 3)
-				SetPedAllowedToDuck(newPed, true)
-				SetAllRandomPedsFlee(newPed, false)
-				SetPedCanCowerInCover(newPed, true)
-				Data[#Data+1] = newPed
+				SetEntityCanBeDamagedByRelationshipGroup(src, true, grouphash)
+				SetPedFleeAttributes(src, 0, false)
+				SetPedCombatAttributes(src, 46, 1)
+				SetPedCombatAbility(src, 100)
+				SetPedCombatMovement(src, 2)
+				SetPedCombatRange(src, 3)
+				SetPedKeepTask(src, true)
+				SetPedDropsWeaponsWhenDead(src, false)
+				SetPedArmour(src, 100)
+				SetPedAccuracy(src, 60)
+				SetEntityInvincible(src, false)
+				SetPedAlertness(src, 3)
+				SetPedAllowedToDuck(src, true)
+				SetAllRandomPedsFlee(src, false)
+				SetPedCanCowerInCover(src, true)
+				--Data[#Data+1] = src
 				Wait(200)
-				exports["qb-target"]:AddTargetEntity(newPed, {
+				exports["qb-target"]:AddTargetEntity(src, {
 					options = {
 						{
 						--	event = "test",
@@ -233,9 +196,11 @@ function Missions:SpawnPeds()
 					distance = 2.5,
 				})
 			end
-			
-		self.NPC = Data
-		print()
+			else
+				--Types: success,primary,error,police,ambulance
+				QBCore.Functions.Notify("Something bad happend creating the npc", "error", 5000)
+			end
+		end,self.MissionID.FIXED.NPC)
 end
 
 function Missions:CreateBoxEnd()
@@ -250,7 +215,27 @@ function Missions:CreateBoxEnd()
 		self.EndMission.Zone:onPointInOut(PolyZone.getPlayerPosition, function(isPointInside, point)
 			self.EndMission.IsInside = isPointInside
 			if isPointInside then
-				TriggerServerEvent("jerico-missions:server:AddItemsInVehicle", self.cid, self.SID)
+
+				Wait(500)
+				FreezeEntityPosition(self.Vehicle.ID,true)
+				TaskLeaveVehicle(self.id,self.Vehicle.ID,0)
+				Wait(1000)
+				TaskGoStraightToCoord(NPC,GetWorldPositionOfEntityBone(self.Vehicle.ID,GetEntityBoneIndexByName(self.Vehicle.ID,"door_pside_r")),1.5,-1,GetEntityHeading(self.Vehicle.ID),0.5)
+			while #(GetEntityCoords(NPC)-GetWorldPositionOfEntityBone(self.Vehicle.ID,GetEntityBoneIndexByName(self.Vehicle.ID,"door_pside_r")) ) >= 2.0 do
+				print "far"
+				Wait(100)
+			end
+			RequestAnimDict("amb@world_human_welding@male@idle_a")
+			while not HasAnimDictLoaded("amb@world_human_welding@male@idle_a") do
+				Wait(10)
+			end
+			Wait(500)
+			TaskStartScenarioInPlace(NPC,"WORLD_HUMAN_WELDING",0,true)
+			Wait(2000)
+			ClearPedTasks(NPC)
+			SetVehicleDoorBroken(self.Vehicle.ID,3,false)
+			TaskGoStraightToCoord(NPC,vector3(1058.85, 3035.84, 41.72),1.5,-1, 289.57,0.5)
+			TriggerServerEvent("jerico-missions:server:AddItemsInVehicle", self.cid, self.SID)
 			else
 			end
 		end)
@@ -263,9 +248,9 @@ function Missions:ForceVehicleDoor(bool)
 		if #self.NPC > 0 then
 			for i = 1, #self.NPC do
 				local el = self.NPC[i]
-				if IsEntityDead(el) then
-					SetVehicleDoorsLocked(self.Vehicle.ID, 1)
-				
+				local src = NetToPed(el.ID)
+				if IsEntityDead(src) then
+					SetVehicleDoorsLocked(self.Vehicle.ID, 0)
 					guille = not guille
 					break
 				end
@@ -274,8 +259,6 @@ function Missions:ForceVehicleDoor(bool)
 		Wait(3000)
 	end
 end
-
-
 
 function Missions:DeleteAll()
 	if self.Vehicle.ID > 0 then
@@ -288,9 +271,9 @@ function Missions:DeleteAll()
 		end
 	end
 end
----Add Items in Vehicle
----@param c Citizenid
----@param s Server ID
+---Add Items in Vehicle, Citizenid and ServerID
+---@param c string
+---@param s number
 function Missions:AddVehicleItems(c,s)
 	if self.SID == s and self.cid == c and GetVehiclePedIsIn(PlayerPedId(),false) == self.Vehicle.ID then
 		print(self.SID,s,self.cid, c)
@@ -322,7 +305,6 @@ RegisterNetEvent("jerico-missions:server:AddItemsInVehicle", function(citizend, 
 end)
 ---Get the key of the player
 ---@param n number
----@param p PlayerId
 
 RegisterNetEvent("jerico-missions:client:GetKey",function(n)
 

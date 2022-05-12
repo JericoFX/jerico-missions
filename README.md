@@ -15,3 +15,12 @@ no no no, it doesnt work at all yet
 - Create a Default Mission non fixable
 
 - Add a self.Type to handle if the mission is Fixed or Movable
+
+- Add Class system to server side
+
+  - Spawn Vehicle Handler
+  - Spawn Peds Handler
+  - Mission Track
+    - [Start, PedSpawn, Spawn Box, IsInsideBox, Rewards]
+  - Track if Player is Dead then mission over
+  - Add a Timer to the missions

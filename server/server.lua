@@ -1,96 +1,160 @@
 local QBCore = exports["qb-core"]:GetCoreObject()
-local Data = { Veh = {} }
-local MissionTrack = {}
-local Cache = {}
-local NPC = {
-	[`a_f_m_fatbla_01`] = vector4(1069.95, 3065.22, 41.11, 186.7),
-	[`a_f_m_fatcult_01`] = vector4(1068.1, 3044.3, 41.37, 159.1),
-	[`a_f_m_fatwhite_01`]= vector4(1077.67, 3037.56, 41.12, 277.48),
-}
+local Num = 0
+local SelectedMission = {}
+local chance
+local Missions = {}
+setmetatable(Missions, self)
 function log(text)
 	print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
 end
 
-RegisterServerEvent("jerico-missions:server:UpdateValue", function(data)
-	local src = source
-	local P = QBCore.Functions.GetPlayer(src)
+function Missions:Init(id, src)
+	self.__index = self
+	self.Id = id
+	self.PlayerID = src
+	self.Mission = Config.Missions[id]
+	self.Type = ""
 
-	for k, v in pairs(data) do
-		if not MissionTrack[P.PlayerData.citizenid] then
-			MissionTrack[P.PlayerData.citizenid] = v
-		end
-	end
-end)
-RegisterServerEvent("jerico-missions:server:UpdateMission", function(state, value)
-	local src = source
-	local P = QBCore.Functions.GetPlayer(src)
-	if not MissionTrack[P.PlayerData.citizenid][state] then
-		log("ERROR STATE NOT REGISTERED")
-		return
-	end
-	MissionTrack[P.PlayerData.citizenid][state] = value
-end)
-
-QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, vehicle, vehiclepos)
-	Data.Veh.VehicleID = CreateVehicle(vehicle, vehiclepos.x, vehiclepos.y, vehiclepos.z, 180, true, true)
-
-	SetVehicleNumberPlateText(Data.Veh.VehicleID, "JERE" .. math.random(1000, 9999))
-	Data.Veh.Plate = GetVehicleNumberPlateText(Data.Veh.VehicleID)
-	Wait(200)
-	if DoesEntityExist(Data.Veh.VehicleID) then
-		Data.Veh.NetID = NetworkGetNetworkIdFromEntity(Data.Veh.VehicleID)
-		cb(Data.Veh)
+	if self.Mission.IS_FIXED then
+		self.Type = "FIXED"
 	else
-		cb(0)
+		self.Type = "MOVABLE"
 	end
-end)
+	self.Mission[self.Type].TAKED = true
+	self.Vehicle = { ID = 0, Plate = "", NetID = 0 }
+	self.Npc = {}
+	self.Blip = 0
+	self.EndMission = nil
 
-RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, sid)
-	TriggerClientEvent("jerico-missions:server:AddItemsInVehicle", source, cid, sid)
-end)
+	Missions:CreateBlip(self.PlayerID)
+	Missions:CreateVehicle()
+	Missions:SpawnPeds()
+	return self
+end
 
-QBCore.Functions.CreateCallback("jerico-missions:server:GetState", function(source, cb, cid)
-	if MissionTrack[cid] then
-		cb(MissionTrack[cid].state)
+function Missions:CreateBlip(src)
+	if self.Type == "FIXED" then
+		QBCore.Functions.TriggerClientCallback("jerico-missions:CB:CreateBlip", src, function(blip)
+			self.Blip = blip
+		end, self.Mission.BLIP_INFO.BLIP_COORDINATE, self.Mission.NAME)
 	end
-end)
+end
 
-QBCore.Functions.CreateCallback("jerico-missions:server:SpawnPeds", function(source, cb, npc)
-	local found = false
-	for model, coords in pairs(npc) do
-		local ped = CreatePed(1, model, coords.x, coords.y, coords.z, coords.w, true, false)
-		Data[#Data + 1] = {
-			source = ped,
-			ID = NetworkGetNetworkIdFromEntity(ped),
-			hash = model,
+function Missions:CreateVehicle(src)
+	self.Vehicle.ID = CreateVehicle(
+		self.Mission[self.Type].VEHICLE_TO_SPAWN,
+		self.Mission[self.Type].VEHICLE_COORDINATE,
+		true,
+		true
+	)
+	SetVehicleNumberPlateText(self.Vehicle.ID, "JERE" .. math.random(1000, 9999))
+	repeat
+		Wait(10)
+
+	until DoesEntityExist(self.Vehicle.ID)
+
+	self.Vehicle.NetID = NetworkGetNetworkIdFromEntity(self.Vehicle.ID)
+	self.Vehicle.Plate = GetVehicleNumberPlateText(self.Vehicle.ID)
+end
+
+function Missions:SpawnPeds()
+	for k, v in pairs(self.Mission[self.Type].NPC) do
+		local Ped = CreatePed(1, k, v.x, v.y, v.z, v.w, true, false)
+
+		Wait(200)
+
+		self.Npc[#self.Npc + 1] = {
+			ID = Ped,
+			hash = k,
+			NetID = NetworkGetNetworkIdFromEntity(Ped),
 		}
 	end
 
-	for i = 1, #Data do
-		local el = Data[i]
-		while not DoesEntityExist(el.source) do
-			Wait(25)
-		end
-		Wait(100)
-		if DoesEntityExist(el.source) then
-			found = true
-		end
+	for i = 1, #self.Npc do
+		Num = i
+		repeat
+			Wait(10)
+		until DoesEntityExist(self.Npc[i].ID)
 	end
-	if found then
-		cb(Data)
-	else
-		cb({})
-	end
-end)
+	QBCore.Functions.TriggerClientCallback("jerico-missions:CB:GivePedSync", self.PlayerID, function(cb)
+		if cb then
+			return true
+		end
+	end, self.Npc)
+	Missions:GetPedsHealth()
+end
 
+function Missions:GetPedsHealth()
+	Wait(500)
+	while true do
+		Wait(1000)
+		for i = 1, #self.Npc do
+			if GetEntityHealth(self.Npc[i].ID) == 0 then
+				QBCore.Functions.TriggerClientCallback("jerico-missions:CB:CreateZone", self.PlayerID, function(cb)
+					if cb then
+						self.EndMission = cb
+					end
+				end, self.Mission[self.Type].END_MISSION_COORDS)
+				break
+			end
+		end
+	end
+end
+function Missions:UpdateZone(Name, Inside, cid)
+	-- if self.EndMission.Zone[Name] then
+	-- 	self.EndMission.Zone[Name].isInside = Inside
+	-- end
+end
+RegisterServerEvent("jerico-missions:SB:IsInside", function(ZoneName, isInside, cid)
+	Missions:UpdateZone(ZoneName, isInside, cid)
+end)
+RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, sid)
+	TriggerClientEvent("jerico-missions:server:AddItemsInVehicle", source, cid, sid)
+end)
+function Missions:DeleteAll()
+	if DoesEntityExist(self.Vehicle.ID) or self.Vehicle.ID > 0 then
+		DeleteEntity(self.Vehicle.ID)
+	end
+	if #self.Npc > 0 then
+		for k, v in ipairs(self.Npc) do
+			if DoesEntityExist(self.Npc[k].ID) then
+				DeleteEntity(self.Npc[k].ID)
+			end
+		end
+	end
+end
 AddEventHandler("onResourceStop", function(resource)
 	if not GetCurrentResourceName() == resource then
 		return
 	end
-	if #Data > 0 then
-		for k, v in ipairs(Data) do
-			local el = Data[k]
-			DeleteEntity(el.source)
-		end
+	Missions:DeleteAll()
+end)
+
+QBCore.Functions.CreateCallback("jerico-missions:SB:GetMissions", function(source, cb)
+	local Data = {}
+	for k, v in ipairs(Config.Missions) do
+		local el = Config.Missions[k]
+		Data[#Data + 1] = { name = el.NAME, id = k }
 	end
+	cb(Data)
+end)
+RegisterServerEvent("jerico-missions:SB:SelectMission", function(id)
+	if not Config.Missions[id.id] then
+		TriggerClientEvent("QBCore:Notify", source, "Error on mission ID", "error")
+	end
+	SelectedMission = Missions:Init(id.id, source)
+end)
+function Missions:SetVehicle()
+	TriggerClientEvent("jerico-missions:client:GetKey", self.PlayerID, self.Vehicle.Plate)
+	TriggerClientEvent("QBCore:Notify", source, "YESSS")
+end
+local number = 1
+RegisterServerEvent("n", function()
+	chance = math.random(number, Num)
+	print(chance, number, Num)
+	if chance == Num then
+		Missions:SetVehicle()
+		number = 1
+	end
+	number = number + 1
 end)

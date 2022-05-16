@@ -69,16 +69,23 @@ cb(true)
 
 end)
 
-QBCore.Functions.CreateClientCallback("jerico-missions:CB:CreateBlip", function(cb,coords)
-		local Zone = BoxZone:Create(coords, 6.6, 10.2, {
-			name = "drug_test",
+QBCore.Functions.CreateClientCallback("jerico-missions:CB:CreateZone", function(cb,coords)
+local c 
+	if coords == "table" then
+		c = vector3(coords.coords.x,coords.coords.y,coordz.coords.z)
+	else
+		c = coords.coords
+	end
+		local Zone = BoxZone:Create(c, coords.height, coords.width, {
+			name = math.random(1000,9999),
 			heading = 0,
 			debugPoly = true,
 		})
 		Zone:onPointInOut(PolyZone.getPlayerPosition, function(isPointInside, point)
 			if isPointInside then
-				TriggerServerEvent("jerico-missions:SB:IsInside",Zone.name)
+				TriggerServerEvent("jerico-missions:SB:IsInside",Zone.name,isPointInside)
 			end
 		end)
 		cb(Zone)
 end)
+

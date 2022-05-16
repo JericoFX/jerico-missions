@@ -1,10 +1,12 @@
 local Missions = {}
 
 CreateThread(function()
-	QBCore.Functions.LoadModel("s_m_m_autoshop_02")
+	Wait(200)
+	print("Carga dale")
+	QBCore.Functions.LoadModel("a_c_killerwhale")
 	NPC = CreatePed(
 		1,
-		`s_m_m_autoshop_02`,
+		`a_c_killerwhale`,
 		vector4(1058.85, 3035.84, 41.72, 289.57),
 		true,
 		false
@@ -22,10 +24,12 @@ CreateThread(function()
 	})
 	BlockPedDeadBodyShockingEvents(NPC, true)
 	SetBlockingOfNonTemporaryEvents(NPC, true)
+	TaskStandGuard(NPC,GetEntityCoords(NPC),180,"WORLD_VEHICLE_POLICE_BIKE")
 end)
 function log(text)
 	print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
 end
+
 
 RegisterNetEvent("openMenu", function()
 	local Data = {}
@@ -86,10 +90,7 @@ function Missions:AddVehicleItems(c, s)
 end
 
 RegisterNetEvent("jerico-missions:client:GetKey", function(plate)
-print("LLEGO ",plate)
-		TriggerEvent("vehiclekeys:client:SetOwner", plate)
-		--Types: success,primary,error,police,ambulance
-	--	QBCore.Functions.Notify("You Recive the Key", "success", 3000)
+	TriggerEvent("vehiclekeys:client:SetOwner", plate)
 end)
 
 CreateThread(function()

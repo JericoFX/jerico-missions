@@ -61,33 +61,6 @@ RegisterNetEvent("openMenu", function()
 	exports["qb-menu"]:openMenu(MenuData)
 end)
 
----Add Items in Vehicle, Citizenid and ServerID
----@param c string
----@param s number
-function Missions:AddVehicleItems(c, s)
-	if self.SID == s and self.cid == c and GetVehiclePedIsIn(PlayerPedId(), false) == self.Vehicle.ID then
-		local items = {}
-		for k, item in pairs(self.MissionID.FIXED.ITEMS_IN_CAR) do
-			local itemInfo = QBCore.Shared.Items[item.name:lower()]
-			items[item.slot] = {
-				name = itemInfo["name"],
-				amount = tonumber(item.amount),
-				info = item.info,
-				label = itemInfo["label"],
-				description = itemInfo["description"] and itemInfo["description"] or "",
-				weight = itemInfo["weight"],
-				type = itemInfo["type"],
-				unique = itemInfo["unique"],
-				useable = itemInfo["useable"],
-				image = itemInfo["image"],
-				slot = item.slot,
-			}
-		end
-		self.MissionID.FIXED.ITEMS_IN_CAR = items
-		Wait(200)
-		TriggerServerEvent("inventory:server:addTrunkItems", self.Vehicle.Plate, self.MissionID.FIXED.ITEMS_IN_CAR)
-	end
-end
 
 RegisterNetEvent("jerico-missions:client:GetKey", function(plate)
 	TriggerEvent("vehiclekeys:client:SetOwner", plate)

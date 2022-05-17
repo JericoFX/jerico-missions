@@ -121,13 +121,21 @@ function Missions:GetPedsHealth()
 end
 function Missions:UpdateZone(Name, Inside)
 	if self.Mission[self.cid].EndMission.name == Name then
-		print(self.Mission[self.cid].EndMission.isInside)
 		self.Mission[self.cid].EndMission.isInside = Inside
+
+		Missions:FinalStep()
 	end
 end
 RegisterServerEvent("jerico-missions:SB:IsInside", function(ZoneName, isInside)
 	Missions:UpdateZone(ZoneName, isInside)
 end)
+function Missions:FinalStep()
+	if self.Mission[self.cid].EndMission.isInside then
+		if GetVehiclePedIsIn(GetPlayerPed(self.PlayerID)) == self.Mission[self.cid].Vehicle.ID then
+			Missions:AddItemsInTrunk()
+		end
+	end
+end
 RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, sid)
 	TriggerClientEvent("jerico-missions:server:AddItemsInVehicle", source, cid, sid)
 end)

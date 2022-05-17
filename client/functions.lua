@@ -18,7 +18,7 @@ QBCore.Functions.CreateClientCallback("jerico-missions:CB:CreateBlip", function(
 	cb(blip)
 end)
 
-QBCore.Functions.CreateClientCallback("jerico-missions:CB:GivePedSync", function(cb, npc) 
+QBCore.Functions.CreateClientCallback("jerico-missions:CB:GivePedSync", function(cb, npc)
 	local Player = PlayerPedId()
 	for k,v in pairs(npc) do
 
@@ -70,7 +70,7 @@ cb(true)
 end)
 
 QBCore.Functions.CreateClientCallback("jerico-missions:CB:CreateZone", function(cb,coords)
-local c 
+local c
 	if coords == "table" then
 		c = vector3(coords.coords.x,coords.coords.y,coordz.coords.z)
 	else

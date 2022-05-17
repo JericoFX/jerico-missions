@@ -62,9 +62,9 @@ RegisterNetEvent("openMenu", function()
 end)
 
 
-RegisterNetEvent("jerico-missions:client:GetKey", function(plate)
-	TriggerEvent("vehiclekeys:client:SetOwner", plate)
-end)
+-- RegisterNetEvent("jerico-missions:client:GetKey", function(plate)
+	
+-- end)
 
 CreateThread(function()
 	Wait(200)

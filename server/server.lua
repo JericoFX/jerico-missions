@@ -122,7 +122,6 @@ end
 function Missions:UpdateZone(Name, Inside)
 	if self.Mission[self.cid].EndMission.name == Name then
 		self.Mission[self.cid].EndMission.isInside = Inside
-
 		Missions:FinalStep()
 	end
 end
@@ -208,7 +207,7 @@ function Missions:AddItemsInTrunk()
 	Wait(200)
 	TriggerEvent(
 		"inventory:server:addTrunkItems",
-		self.Mission[self.cid].Vehicle,
+		self.Mission[self.cid].Vehicle.Plate,
 		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].ITEMS_IN_CAR
 	)
 end

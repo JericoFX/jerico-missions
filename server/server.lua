@@ -27,6 +27,8 @@ function Missions:Init(id, src, cid)
 		self.Mission[self.cid].Mission.Type = "MOVABLE"
 	end
 	--- Set the Mission Taked so no one else can spawn it
+	Config.Missions[id].TAKED = true
+	--- 
 	self.Mission[self.cid].Mission.TAKED = true
 	--- Save the Vehicle Information
 	--- @ID Server side Entity number
@@ -139,10 +141,10 @@ RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, si
 	TriggerClientEvent("jerico-missions:server:AddItemsInVehicle", source, cid, sid)
 end)
 function Missions:DeleteAll()
-	if self.Mission[self.cid].Vehicle.ID == nil then
-		return
+	if self.Mission[self.cid].Vehicle.ID > 0 and self.Mission[self.cid].Vehicle.ID ~= nil then
+		DeleteEntity(self.Mission[self.cid].Vehicle.ID)
 	end
-	DeleteEntity(self.Mission[self.cid].Vehicle.ID)
+	
 	if #self.Npc > 0 then
 		for k, v in ipairs(self.Mission[self.cid].Npc) do
 			if DoesEntityExist(self.Mission[self.cid].Npc[k].ID) then
@@ -156,7 +158,12 @@ QBCore.Functions.CreateCallback("jerico-missions:SB:GetMissions", function(sourc
 	local Data = {}
 	for k, v in ipairs(Config.Missions) do
 		local el = Config.Missions[k]
-		Data[#Data + 1] = { name = el.NAME, id = k }
+			if not el.TAKED then
+				Data[#Data + 1] = { name = el.NAME, id = k }
+				else
+				Data[#Data + 1] = {name = "No Mission Available",id = nil}
+			end
+		
 	end
 	cb(Data)
 end)

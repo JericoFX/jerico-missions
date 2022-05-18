@@ -89,3 +89,19 @@ local c
 		cb(Zone)
 end)
 
+QBCore.Functions.CreateClientCallback("jerico-missions:CB:GetClosestEntityBone", function(cb,netid,id)
+	
+	while not NetworkDoesNetworkIdExist(id) do
+		Wait(1000)
+		print("ADD")
+	end
+	local d = NetToEnt(id)
+
+	Wait(1000)
+	local boneCoords = GetWorldPositionOfEntityBone(netid, GetEntityBoneIndexByName(netid,"door_dside_f"))
+	local boneCoords1 = GetWorldPositionOfEntityBone(d, GetEntityBoneIndexByName(d,"door_dside_f"))
+	local boneCoords2 = GetWorldPositionOfEntityBone(id, GetEntityBoneIndexByName(id,"door_dside_f"))
+	print(boneCoords,boneCoords1,boneCoords2)
+			cb(boneCoords1)
+end)
+

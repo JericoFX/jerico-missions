@@ -9,12 +9,19 @@ local chance
 local Missions = {}
 
 setmetatable(Missions, self)
-
+---Function to pass a table or a text and will show it on the console
+---@param text any
+---@return string
 function log(text)
-	print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
+	return print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
 end
 
-function Missions:Init(id, src, cid)
+---Starting point of the mission
+---@param id number
+---@param src number
+---@return table
+
+function Missions:Init(id, src)
 	local Player = QBCore.Functions.GetPlayer(src)
 
 	self.__index = self
@@ -40,12 +47,10 @@ function Missions:Init(id, src, cid)
 	end
 
 	--- Set the Mission Taked so no one else can spawn it
-
 	Config.Missions[id].TAKED = true
 	---
-
 	self.Mission[self.cid].Mission.TAKED = true
-
+	self.Mission[self.cid].Mission.NPC_END = nil
 	--- Save the Vehicle Information
 
 	--- @ID Server side Entity number
@@ -86,7 +91,7 @@ function Missions:Init(id, src, cid)
 
 	Missions:CreateVehicle()
 
-	Missions:SpawnPeds()
+	--	Missions:SpawnPeds()
 
 	return self
 end
@@ -100,30 +105,34 @@ function Missions:CreateBlip(src)
 end
 
 function Missions:CreateVehicle(src)
-	self.Mission[self.cid].Vehicle.ID = CreateVehicle(
+	local CreateAutomobile = GetHashKey("CREATE_AUTOMOBILE")
+	self.Mission[self.cid].Vehicle.ID = Citizen.InvokeNative(
+		CreateAutomobile,
 		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].VEHICLE_TO_SPAWN,
-		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].VEHICLE_COORDINATE,
+		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].VEHICLE_COORDINATE.x,
+		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].VEHICLE_COORDINATE.y,
+		self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].VEHICLE_COORDINATE.z,
+		180,
 		true,
-		true
+		false
 	)
 
+	while not DoesEntityExist(self.Mission[self.cid].Vehicle.ID) do
+		Wait(100)
+	end
 	SetVehicleNumberPlateText(self.Mission[self.cid].Vehicle.ID, "JERE" .. math.random(1000, 9999))
-
-	repeat
-		Wait(10)
-	until DoesEntityExist(self.Mission[self.cid].Vehicle.ID)
-
-	self.Mission[self.cid].Vehicle.NetID = NetworkGetNetworkIdFromEntity(self.Mission[self.cid].Vehicle.ID)
-
-	self.Mission[self.cid].Vehicle.Plate = GetVehicleNumberPlateText(self.Mission[self.cid].Vehicle.ID)
+	if DoesEntityExist(self.Mission[self.cid].Vehicle.ID) then
+		self.Mission[self.cid].Vehicle.NetID = NetworkGetNetworkIdFromEntity(self.Mission[self.cid].Vehicle.ID)
+		self.Mission[self.cid].Vehicle.Plate = GetVehicleNumberPlateText(self.Mission[self.cid].Vehicle.ID)
+	end
 end
 
 function Missions:SpawnPeds()
 	for k, v in pairs(self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].NPC) do
 		local Ped = CreatePed(1, k, v.x, v.y, v.z, v.w, true, false)
-		repeat
-			Wait(10)
-		until DoesEntityExist(Ped)
+		while not DoesEntityExist(Ped) do
+			Wait(100)
+		end
 		self.Mission[self.cid].Npc[#self.Mission[self.cid].Npc + 1] = {
 			ID = Ped,
 			hash = k,
@@ -133,10 +142,9 @@ function Missions:SpawnPeds()
 
 	for i = 1, #self.Mission[self.cid].Npc do
 		Num = i
-
-		repeat
-			Wait(10)
-		until DoesEntityExist(self.Mission[self.cid].Npc[i].ID)
+		-- repeat
+		-- 	Wait(10)
+		-- until DoesEntityExist(self.Mission[self.cid].Npc[i].ID)
 	end
 
 	QBCore.Functions.TriggerClientCallback("jerico-missions:CB:GivePedSync", self.PlayerID, function(cb)
@@ -173,7 +181,6 @@ end
 function Missions:UpdateZone(Name, Inside)
 	if self.Mission[self.cid].EndMission.name == Name then
 		self.Mission[self.cid].EndMission.isInside = Inside
-
 		Missions:FinalStep()
 	end
 end
@@ -185,7 +192,49 @@ end)
 function Missions:FinalStep()
 	if self.Mission[self.cid].EndMission.isInside then
 		if GetVehiclePedIsIn(GetPlayerPed(self.PlayerID)) == self.Mission[self.cid].Vehicle.ID then
-			Missions:AddItemsInTrunk()
+			Wait(200)
+			FreezeEntityPosition(self.Mission[self.cid].Vehicle.ID)
+			TaskLeaveVehicle(self.PlayerID, self.Mission[self.cid].Vehicle.ID, 0)
+			if self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].SPAWN_NPC_AT_END_OF_MISSION then
+				self.Mission[self.cid].Mission.NPC_END = CreatePed(
+					1,
+					self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].NPC_END_MISSION.name,
+					self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].NPC_END_MISSION.coords.x,
+					self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].NPC_END_MISSION.coords.y,
+					self.Mission[self.cid].Mission[self.Mission[self.cid].Mission.Type].NPC_END_MISSION.coords.z
+				)
+				-- while not DoesEntityExist(self.Mission[self.cid].Mission.NPC_END) do
+				-- 	Wait(10)
+				-- end
+				local NPC_COORDS = GetEntityCoords(self.Mission[self.cid].Mission.NPC_END)
+				local VEHICLE_COORDS = GetEntityCoords(self.Mission[self.cid].Vehicle.ID)
+				QBCore.Functions.TriggerClientCallback(
+					"jerico-missions:CB:GetClosestEntityBone",
+					self.PlayerID,
+					function(coords)
+						if coords then
+							TaskGoStraightToCoord(
+								self.Mission[self.cid].Mission.NPC_END,
+								coords,
+								1.0,
+								-1,
+								GetEntityHeading(self.Mission[self.cid].Vehicle.ID),
+								0.1
+							)
+						end
+						print(self.Mission[self.cid].Vehicle.ID)
+						-- while #(coords - NPC_COORDS) > 3.0 do
+						-- 	Wait(100)
+						-- end
+					end,
+					self.Mission[self.cid].Vehicle.ID
+				)
+
+				ClearPedTasksImmediately(self.Mission[self.cid].Mission.NPC_AT_END)
+				Missions:AddItemsInTrunk()
+			else
+				Missions:AddItemsInTrunk()
+			end
 		end
 	end
 end
@@ -195,49 +244,57 @@ RegisterServerEvent("jerico-missions:server:AddItemsInVehicle", function(cid, si
 end)
 
 function Missions:DeleteAll()
-	if self.Mission[self.cid].Vehicle.ID > 0 and self.Mission[self.cid].Vehicle.ID ~= nil then
-		DeleteEntity(self.Mission[self.cid].Vehicle.ID)
-	end
-
-	DeleteEntity(self.Mission[self.cid].Vehicle.ID)
-
-	if #self.Npc > 0 then
-		for k, v in ipairs(self.Mission[self.cid].Npc) do
-			if DoesEntityExist(self.Mission[self.cid].Npc[k].ID) then
-				DeleteEntity(self.Mission[self.cid].Npc[k].ID)
+	if self.Mission then
+		if self.Mission[self.cid].Vehicle.ID > 0 and self.Mission[self.cid].Vehicle.ID ~= nil then
+			DeleteEntity(self.Mission[self.cid].Vehicle.ID)
+		end
+		if self.Mission[self.cid].NPC_END ~= nil then
+			DeleteEntity(self.Mission[self.cid].NPC_END)
+		end
+		if #self.Mission[self.cid].Npc > 0 then
+			for k, v in ipairs(self.Mission[self.cid].Npc) do
+				if DoesEntityExist(self.Mission[self.cid].Npc[k].ID) then
+					DeleteEntity(self.Mission[self.cid].Npc[k].ID)
+				end
 			end
 		end
 	end
 end
+function Missions:SOmething()
+	QBCore.Functions.TriggerClientCallback("jerico-missions:CB:GetClosestEntityBone", self.PlayerID, function(coords)
+		print(coords)
+	end, self.Mission[self.cid].Vehicle.ID, self.Mission[self.cid].Vehicle.NetID)
+end
 
+RegisterCommand("a", function(source, args)
+	Missions:SOmething()
+end)
 QBCore.Functions.CreateCallback("jerico-missions:SB:GetMissions", function(source, cb)
 	local Data = {}
 
 	for k, v in ipairs(Config.Missions) do
 		local el = Config.Missions[k]
-
 		Data[#Data + 1] = { name = el.NAME, id = k }
-
 		if not el.TAKED then
 			Data[#Data + 1] = { name = el.NAME, id = k }
 		else
 			Data[#Data + 1] = { name = "No Mission Available", id = nil }
 		end
 	end
-
 	cb(Data)
 end)
 
 RegisterServerEvent("jerico-missions:SB:SelectMission", function(id)
 	local src = source
-
 	if not Config.Missions[id.id] then
 		TriggerClientEvent("QBCore:Notify", source, "Error on mission ID", "error")
 	end
 
 	SelectedMission = Missions:Init(id.id, src)
 end)
-
+-- CreateThread(function()
+-- 	SelectedMission = Missions:Init(1, src)
+-- end)
 function Missions:SetVehicle()
 	TriggerClientEvent("vehiclekeys:client:SetOwner", self.PlayerID, self.Mission[self.cid].Vehicle.Plate)
 

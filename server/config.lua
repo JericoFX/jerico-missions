@@ -31,6 +31,9 @@ Config.Missions = {
 			NPC_MISSION = {
 				{name = `a_c_killerwhale` , coords =  vector4(1241.28, -3297.45, 5.53, 276.63)}
 			},
+			SPAWN_NPC_AT_END_OF_MISSION = true,
+			NPC_END_MISSION = {name = `a_f_m_fatcult_01` , coords =  vector4(1063.07, 3048.83, 41.48, 108.81)}
+			,
 			ITEMS_IN_CAR = {
 				[1] = {
 						name = "heavyarmor",

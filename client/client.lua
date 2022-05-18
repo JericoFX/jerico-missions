@@ -2,7 +2,6 @@ local Missions = {}
 
 CreateThread(function()
 	Wait(200)
-	print("Carga dale")
 	QBCore.Functions.LoadModel("a_c_killerwhale")
 	NPC = CreatePed(
 		1,

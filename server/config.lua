@@ -7,19 +7,24 @@ Config.Missions = {
 		BLIP_INFO = {
 			BLIP_COORDINATE = vector3(1068.14, 3051.61, 41.3), -- if the above is true, just set the coords here
 		},
-		IS_MOVABLE = false, -- This will spawn a vehicle in a random position and you need to chase it
+		IS_MOVABLE = true, -- This will spawn a vehicle in a random position and you need to chase it
 		MOVABLE = {
 			VEHICLE_TO_SPAWN = `police`, -- Hash of the vehicle to spawn
-			VEHICLE_COORDINATE = vector3(0, 0, 0), -- Coordinate ov the vehicle to spawn
+			VEHICLE_COORDINATE = vector3(1071.92, 3043.04, 40.89), -- Coordinate ov the vehicle to spawn
 			HAS_ESCOLT = false, -- The spawn vehicle will have a escolt car?
 			VEHICLE_ESCOLT_SPAWN = `adder`, -- if the above is true, this car will spawn and follow the car above.
 			SPAWN_PED_ON_VEHICLE_ESCOLT = false, -- Spawn NPC's on the escol cars? (beside the driver)
 			AMOUNT_ESCOLT_NPC_IN_VEHICLE = 1, -- How much NPC's beside the driver will spawn in the car?.
+			NPC = {
+				a_f_m_fatbla_01 =  -1, -- Driver Seat
+				a_f_m_fatcult_01 = 0, --
+				a_f_m_fatwhite_01 = 1 --
+			},
 			ITEMS_IN_CAR = {
 				[1] = { ITEM_NAME = "sandwitch", AMOUNT = math.random(1, 6) }, -- Item name and Amount of item
 			},
 		},
-		IS_FIXED = true, -- if not movable, so is a fixed mission.
+		IS_FIXED = false, -- if not movable, so is a fixed mission.
 		FIXED = {
 			VEHICLE_TO_SPAWN = `burrito3`, -- Vehicle to spawn on the fixed position.
 			VEHICLE_COORDINATE = vector3(1071.92, 3043.04, 40.89), -- Coordinate to spawn the vehicle.
@@ -31,7 +36,7 @@ Config.Missions = {
 			NPC_MISSION = {
 				{name = `a_c_killerwhale` , coords =  vector4(1241.28, -3297.45, 5.53, 276.63)}
 			},
-			SPAWN_NPC_AT_END_OF_MISSION = true,
+			SPAWN_NPC_AT_END_OF_MISSION = false,
 			NPC_END_MISSION = {name = `a_f_m_fatcult_01` , coords =  vector4(1063.07, 3048.83, 41.48, 108.81)}
 			,
 			ITEMS_IN_CAR = {

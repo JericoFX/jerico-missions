@@ -149,8 +149,8 @@ function Missions:CreateVehicle()
 			if DoesEntityExist(self.Mission[self.cid].Vehicle.ID) then
 				self.Mission[self.cid].Vehicle.NetID = NetworkGetNetworkIdFromEntity(self.Mission[self.cid].Vehicle.ID)
 				self.Mission[self.cid].Vehicle.Plate = GetVehicleNumberPlateText(self.Mission[self.cid].Vehicle.ID)
-				Wait(200)
-				TriggerClientEvent("vehiclekeys:client:SetOwner", self.PlayerID, self.Mission[self.cid].Vehicle.Plate)
+-- 				Wait(200) Just for testing!
+-- 				TriggerClientEvent("vehiclekeys:client:SetOwner", self.PlayerID, self.Mission[self.cid].Vehicle.Plate)
 			end
 		end
 	end)

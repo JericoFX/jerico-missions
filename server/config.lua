@@ -1,13 +1,13 @@
 Config = Config or {}
 Config.Missions = {
 	[1] = {
-		TAKED = false, --Set this to false, the code will change it dinamic
-		NAME = "LUCIANA", --Name of the Mission
+		TAKED = false, --Set this to false, the code will change it dynamic
+		NAME = "Mission Name", --Name of the Mission
 		HAS_BLIP = true, -- The mission will have a blip?
 		BLIP_INFO = {
 			BLIP_COORDINATE = vector3(1068.14, 3051.61, 41.3), -- if the above is true, just set the coords here
 		},
-		IS_MOVABLE = true, -- This will spawn a vehicle in a random position and you need to chase it
+		IS_MOVABLE = true, -- This will spawn a vehicle and you need to chase it
 		MOVABLE = {
 			VEHICLE_TO_SPAWN = `police`, -- Hash of the vehicle to spawn
 			VEHICLE_COORDINATE = vector3(1071.92, 3043.04, 40.89), -- Coordinate ov the vehicle to spawn

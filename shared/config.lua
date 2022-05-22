@@ -1,4 +1,7 @@
 Config = Config or {}
+Config.NPC = {
+	hash = `a_m_m_eastsa_01`, coords = vector3(1511.0, 3128.94, 40.53)
+}
 Config.Missions = {
 	[1] = {
 		TAKED = false, --Set this to false, the code will change it dynamic
@@ -9,16 +12,16 @@ Config.Missions = {
 		},
 		IS_MOVABLE = true, -- This will spawn a vehicle and you need to chase it
 		MOVABLE = {
-			VEHICLE_TO_SPAWN = `police`, -- Hash of the vehicle to spawn
-			VEHICLE_COORDINATE = vector3(1071.92, 3043.04, 40.89), -- Coordinate ov the vehicle to spawn
+			VEHICLE_TO_SPAWN = "burrito3", -- Hash of the vehicle to spawn
+			VEHICLE_COORDINATE = vector3(1073.16, 3039.89, 41.25), -- Coordinate ov the vehicle to spawn
 			HAS_ESCOLT = false, -- The spawn vehicle will have a escolt car?
 			VEHICLE_ESCOLT_SPAWN = `adder`, -- if the above is true, this car will spawn and follow the car above.
 			SPAWN_PED_ON_VEHICLE_ESCOLT = false, -- Spawn NPC's on the escol cars? (beside the driver)
 			AMOUNT_ESCOLT_NPC_IN_VEHICLE = 1, -- How much NPC's beside the driver will spawn in the car?.
 			NPC = {
-				a_f_m_fatbla_01 =  -1, -- Driver Seat
-				a_f_m_fatcult_01 = 0, --
-				a_f_m_fatwhite_01 = 1 --
+				[`a_f_m_fatbla_01`] =  -1, -- Driver Seat
+				[`a_f_m_fatcult_01`] = 0, --
+				[`a_f_m_fatwhite_01`] = 1 --
 			},
 			ITEMS_IN_CAR = {
 				[1] = { ITEM_NAME = "sandwitch", AMOUNT = math.random(1, 6) }, -- Item name and Amount of item

@@ -1,5 +1,10 @@
 
  QBCore = exports["qb-core"]:GetCoreObject()
+function DrawMarkers(coords)
+	DrawMarker(3, coords.x, coords.y, coords.z, 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, 2.0, 2.0, 2.0, 255, 128, 0, 50, false, true, 2, nil, nil, false)
+
+
+ end
 -- local function log(text)
 -- 	print(json.encode(text, { pretty = true, indent = "  ", align_keys = true }))
 -- end

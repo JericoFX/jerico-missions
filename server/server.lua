@@ -61,12 +61,11 @@ RegisterNetEvent("jerico-missions:server:CreateMission", function(id)
 	local Player = QBCore.Functions.GetPlayer(src)
 	local PC = GetEntityCoords(GetPlayerPed(src))
 	local randomID = uuid()
-	--[[	if #(PC - Config.NPC.coords.xyz) > 3.0 then
-            print(#(PC - Config.NPC.coords.xyz))
-            print("The fuck are you?")
-            return
-             CHECK IF THE PLAYER IS NEAR THE NPC TO START THE MISSION!
-        end]]
+	if #(PC - Config.NPC.coords) > 3.0 then
+		print(#(PC - Config.NPC.coords))
+		print("The fuck are you?")
+		return
+	end
 	if CurrentMission[Player.PlayerData.citizenid] then
 		print(CurrentMission[Player.PlayerData.citizenid])
 		TriggerClientEvent("QBCore:Notify", src, "Player Already in a mission or Mission is already taken")
@@ -93,67 +92,14 @@ RegisterNetEvent("jerico-missions:server:AddItemsInTrunk", function(cid, d, type
 			if meta.uid == d then
 				for k, v in pairs(CurrentMission[cid][type].ITEMS_IN_CAR) do
 					Player.Functions.AddItem(k, v)
-					--Send to discord!wwwwwwwwwww
-
+					--Send to discord!
 					Config.Missions[Player.PlayerData.metadata["jerico-missions"].id].TAKED = false
 					CurrentMission[cid] = nil
 					Player.Functions.SetMetaData("jerico-missions", { id = nil, uid = nil, taked = false })
 				end
 			end
-
-			-- local items = {}
-
-			-- for k, item in pairs(CurrentMission[cid][type].ITEMS_IN_CAR) do
-			-- 	local itemInfo = QBCore.Shared.Items[item.name:lower()]
-
-			-- 	items[item.slot] = {
-
-			-- 		name = itemInfo["name"],
-
-			-- 		amount = tonumber(item.amount),
-
-			-- 		info = item.info,
-
-			-- 		label = itemInfo["label"],
-
-			-- 		description = itemInfo["description"] and itemInfo["description"] or "",
-
-			-- 		weight = itemInfo["weight"],
-
-			-- 		type = itemInfo["type"],
-
-			-- 		unique = itemInfo["unique"],
-
-			-- 		useable = itemInfo["useable"],
-
-			-- 		image = itemInfo["image"],
-
-			-- 		slot = item.slot,
-			-- 	}
-			-- end
-
-			-- CurrentMission[cid][type].ITEMS_IN_CAR = items
-
-			--Wait(200)
-
-			--TriggerEvent("inventory:server:addTrunkItems", plate, CurrentMission[cid][type].ITEMS_IN_CAR)
 		else
 			print("Exploit Detected?")
 		end
 	end
 end)
-
---AddEventHandler("onResourceStop", function(resource)
---    local src = source
---    print(src)
---    local Player = QBCore.Functions.GetPlayer(src).PlayerData.citizenid
---    if not GetCurrentResourceName() == resource then
---        return
---    end
---    if CurrentMission[Player] then
---        if CurrentMission[Player].Vehicle then
---            DeleteEntity(CurrentMission[Player].Vehicle)
---        end
---    end
---
---end)

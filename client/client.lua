@@ -29,12 +29,13 @@ function Missions:Init(id, cid, data)
 	if self.MissionData[self.Citizenid].IS_MOVABLE then
 		self.MissionData[self.Citizenid].Type = "MOVABLE"
 	end
-	print(self.MissionData[self.Citizenid].Type)
 	self.MissionData[self.Citizenid].Temp_blip = nil
 	self.MissionData[self.Citizenid].D = data
 	self.MissionData[self.Citizenid].Blip = nil
 	self.MissionData[self.Citizenid].Zone = nil
 	self.MissionData[self.Citizenid].Vehicle = { ID = 0, Plate = "" }
+	self.MissionData[self.Citizenid].Escolt_Vehicle = { ID = 0, Plate = "" }
+	self.MissionData[self.Citizenid].Escolt_Npc = {}
 	self.MissionData[self.Citizenid].Npc = {}
 	self.MissionData[self.Citizenid].ID = PlayerId()
 	self.MissionData[self.Citizenid].PlayerPed = PlayerPedId()
@@ -69,7 +70,7 @@ function Missions:CreateVehicle()
 			CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
 			Missions:SpawnPeds()
 			Missions:AddBlip()
-		end, self.Id, self.MissionData[self.Citizenid].Type)
+		end, self.Id, self.MissionData[self.Citizenid].Type, false)
 	else
 		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
 			while not NetworkDoesNetworkIdExist(net) do
@@ -109,6 +110,7 @@ end
 function Missions:SpawnPeds()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
+			print("DOne?")
 			RequestModel(k)
 			while not HasModelLoaded(k) do
 				Wait(100)
@@ -141,7 +143,7 @@ function Missions:SpawnPeds()
 			TaskVehicleDriveWander(
 				GetPedInVehicleSeat(self.MissionData[self.Citizenid].Vehicle.ID, -1),
 				self.MissionData[self.Citizenid].Vehicle.ID,
-				1.0,
+				90.0,
 				536871740
 			)
 			TriggerEvent("vehiclekeys:client:SetOwner", self.MissionData[self.Citizenid].Vehicle.Plate)
@@ -215,7 +217,7 @@ function Missions:GetVehicleKeys()
 							exports["qb-target"]:RemoveTargetEntity(el, "Search Keys")
 						end
 					else
-						QBCore.Functions.Notify("This person doesn´t have the key", "error", 3000)
+						QBCore.Functions.Notify("You didn´t found the key", "error", 3000)
 						numb = numb + 1
 					end
 				end
@@ -267,6 +269,13 @@ function Missions:AddBlip()
 		end
 	end
 end
+
+function Missions:Data()
+	print(self.MissionData[self.Citizenid].Vehicle.ID, GetVehiclePedIsIn(self.MissionData[self.Citizenid].PlayerPed))
+end
+RegisterCommand("asd", function(source, args)
+	Missions:Data()
+end)
 RegisterNetEvent("jerico-missions:client:CreateMissionConfig", function(ID, citizenid, cid)
 	if cid == nil or cid == "" then
 		print("Exploit?")
@@ -304,7 +313,16 @@ function Missions:HandlePedsMovable(a1, a2)
 				self.MissionData[self.Citizenid].Vehicle.ID == a1
 				or self.MissionData[self.Citizenid].Vehicle.ID == a2
 			then
-				if GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 800.0 then
+				if
+					GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 750.0
+					and GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) >= 800.0
+				then
+					SetDriveTaskDrivingStyle(
+						GetPedInVehicleSeat(self.MissionData[self.Citizenid].Vehicle.ID, -1),
+						786948
+					)
+				end
+				if GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 700.0 then
 					for i = 1, #self.MissionData[self.Citizenid].Npc do
 						local el = self.MissionData[self.Citizenid].Npc[i]
 						if not IsEntityDead(el) then
@@ -464,4 +482,6 @@ AddEventHandler("gameEventTriggered", function(name, args)
 	if name == "CEventNetworkEntityDamage" then
 		Missions:HandlePedsMovable(args[1], args[2]) -- Checking evey time you get shot or the target vehicle
 	end
+	-- Print on the server console a table
+	QBCore.Debug({ name, args })
 end)

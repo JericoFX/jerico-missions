@@ -12,11 +12,13 @@ end
 function CheckResource()
 	return GetInvokingResource() == "jerico-missions" or GetInvokingResource() == "qb-core"
 end
-QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, id, type)
+QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, id, type, escolt)
 	if not CheckResource() then
 		print("WHAT HAPPEND")
 		return
 	end
+
+	local e = nil
 	local Player = QBCore.Functions.GetPlayer(source).PlayerData.citizenid
 	local CreateAutomobile = GetHashKey("CREATE_AUTOMOBILE")
 	if CurrentMission[Player] then
@@ -28,16 +30,43 @@ QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(
 			true,
 			false
 		)
+
 		while not DoesEntityExist(v) do
 			Wait(25)
 			print("Waiting")
 		end
-		if DoesEntityExist(v) then
-			CurrentMission[Player].Vehicle = v
-			local netId = NetworkGetNetworkIdFromEntity(v)
-			cb(netId)
+		if escolt == "table" then
+			e = Citizen.InvokeNative(
+				CreateAutomobile,
+				GetHashKey(CurrentMission[Player][type].VEHICLE_ESCOLT_SPAWN),
+				escolt.x,
+				escolt.y,
+				escolt.z,
+				180.0,
+				true,
+				false
+			)
+			while not DoesEntityExist(e) do
+				Wait(25)
+				print("Waiting")
+			end
+			if DoesEntityExist(v) and DoesEntityExist(e) then
+				CurrentMission[Player].Vehicle = e
+				local netIdV = NetworkGetNetworkIdFromEntity(v)
+				local netIdE = NetworkGetNetworkIdFromEntity(e)
+				cb(netIdV, netIdE)
+			else
+				cb(0)
+			end
 		else
-			cb(0)
+			if DoesEntityExist(v) then
+				CurrentMission[Player].Vehicle = v
+				local netIdV = NetworkGetNetworkIdFromEntity(v)
+
+				cb(netIdV)
+			else
+				cb(0)
+			end
 		end
 	else
 		print("NO NO NO")

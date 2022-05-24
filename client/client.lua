@@ -21,6 +21,7 @@ function Missions:Init(id, cid, data)
 	if self.MissionData[self.Citizenid].IS_MOVABLE then
 		self.MissionData[self.Citizenid].Type = "MOVABLE"
 	end
+	print(self.MissionData[self.Citizenid].Type)
 	self.MissionData[self.Citizenid].Temp_blip = nil
 	self.MissionData[self.Citizenid].D = data
 	self.MissionData[self.Citizenid].Blip = nil
@@ -42,25 +43,43 @@ end
 
 function Missions:CreateVehicle()
 	local Player = QBCore.Functions.GetPlayerData().citizenid
-	QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
-		Missions:TempBlip()
-		while not NetworkDoesNetworkIdExist(net) do
-			Wait(1000)
-		end
-		if not CurrentMission[Player] then
-			CurrentMission[Player] = {}
-			CurrentMission[Player].Vehicle = { ID = 0, Plate = "" }
-		end
-		self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
-		self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
-			self.MissionData[self.Citizenid].Vehicle.ID
-		)
-		CurrentMission[Player].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
-		CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
-
-		Missions:SpawnPeds()
-		Missions:AddBlip()
-	end, self.Id, self.MissionData[self.Citizenid].Type)
+	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
+		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
+			Missions:TempBlip()
+			while not NetworkDoesNetworkIdExist(net) do
+				Wait(1000)
+			end
+			if not CurrentMission[Player] then
+				CurrentMission[Player] = {}
+				CurrentMission[Player].Vehicle = { ID = 0, Plate = "" }
+			end
+			self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+			self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
+				self.MissionData[self.Citizenid].Vehicle.ID
+			)
+			CurrentMission[Player].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+			CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
+			Missions:SpawnPeds()
+			Missions:AddBlip()
+		end, self.Id, self.MissionData[self.Citizenid].Type)
+	else
+		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
+			while not NetworkDoesNetworkIdExist(net) do
+				Wait(1000)
+			end
+			if not CurrentMission[Player] then
+				CurrentMission[Player] = {}
+				CurrentMission[Player].Vehicle = { ID = 0, Plate = "" }
+			end
+			self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+			self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
+				self.MissionData[self.Citizenid].Vehicle.ID
+			)
+			CurrentMission[Player].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+			CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
+			Missions:SpawnPeds()
+		end, self.Id, self.MissionData[self.Citizenid].Type)
+	end
 end
 
 function Missions:TempBlip()
@@ -78,7 +97,9 @@ function Missions:TempBlip()
 	AddTextComponentString(self.MissionData[self.Citizenid].NAME)
 	EndTextCommandSetBlipName(self.MissionData[self.Citizenid].Temp_blip)
 end
-
+local n = 1
+local Num = 1
+local chance = math.random(n, Num)
 function Missions:SpawnPeds()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
@@ -119,15 +140,18 @@ function Missions:SpawnPeds()
 			)
 			TriggerEvent("vehiclekeys:client:SetOwner", self.MissionData[self.Citizenid].Vehicle.Plate)
 			self.MissionData[self.Citizenid].Npc[#self.MissionData[self.Citizenid].Npc + 1] = Ped
+			Wait(100)
+			Num = #self.MissionData[self.Citizenid].Npc
 		end
 	else
-		for k, v in ipairs(self.MissionData[self.Citizenid].NPC) do
+		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
 			QBCore.Functions.LoadModel(k)
 			local Ped = CreatePed(1, k, v.x, v.y, v.z, v.w, true, false)
 			NetworkRegisterEntityAsNetworked(Ped)
 			SetNetworkIdCanMigrate(NetworkGetNetworkIdFromEntity(Ped), true)
 			SetNetworkIdExistsOnAllMachines(NetworkGetNetworkIdFromEntity(Ped), true)
-			SetPedRelationshipGroupDefaultHash(Ped, GetHashKey("HATES_PLAYER"))
+			SetPedRelationshipGroupDefaultHash(Ped, GetHashKey("COP"))
+			SetPedRelationshipGroupHash(Ped, GetHashKey("COP"))
 			SetPedAsCop(Ped, true)
 			GiveWeaponToPed(Ped, "WEAPON_SMG", 1, false, true)
 			SetEntityCanBeDamagedByRelationshipGroup(Ped, true, grouphash)
@@ -163,6 +187,7 @@ function Missions:SpawnPeds()
 				},
 				distance = 2.5,
 			})
+			TaskCombatPed(Ped, self.MissionData[self.Citizenid].PlayerPed, 0, 16)
 			self.MissionData[self.Citizenid].Npc[#self.MissionData[self.Citizenid].Npc + 1] = Ped
 		end
 	end
@@ -242,40 +267,45 @@ local n = 1
 local c = true
 
 function Missions:HandlePedsMovable(a1, a2)
-	CreateThread(function()
-		if self.MissionData[self.Citizenid].Vehicle.ID == a1 or self.MissionData[self.Citizenid].Vehicle.ID == a2 then
-			if GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 800.0 then
-				for i = 1, #self.MissionData[self.Citizenid].Npc do
-					local el = self.MissionData[self.Citizenid].Npc[i]
-					if not IsEntityDead(el) then
-						TaskLeaveVehicle(el, self.MissionData[self.Citizenid].Vehicle.ID, 0)
-						TaskCombatPed(el, self.MissionData[self.Citizenid].PlayerPed, 0, 16)
-					end
-				end
-			end
-		end
-		for i = 1, #self.MissionData[self.Citizenid].Npc do
-			local el = self.MissionData[self.Citizenid].Npc[i]
-			if a1 == el or a2 == el then
-				if IsEntityDead(el) then
-					if n == #self.MissionData[self.Citizenid].Npc then
-						QBCore.Functions.Notify("Take The vehicle and deliver the cargo")
-						Missions:FinalStep()
-						while c do
-							Wait(0)
-							DrawMarkers(
-								self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].END_MISSION_COORDS.coords
-							)
-							if not c then
-								break
-							end
+	if self.MissionData then
+		CreateThread(function()
+			if
+				self.MissionData[self.Citizenid].Vehicle.ID == a1
+				or self.MissionData[self.Citizenid].Vehicle.ID == a2
+			then
+				if GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 800.0 then
+					for i = 1, #self.MissionData[self.Citizenid].Npc do
+						local el = self.MissionData[self.Citizenid].Npc[i]
+						if not IsEntityDead(el) then
+							TaskLeaveVehicle(el, self.MissionData[self.Citizenid].Vehicle.ID, 0)
+							TaskCombatPed(el, self.MissionData[self.Citizenid].PlayerPed, 0, 16)
 						end
 					end
-					n = n + 1
 				end
 			end
-		end
-	end)
+			for i = 1, #self.MissionData[self.Citizenid].Npc do
+				local el = self.MissionData[self.Citizenid].Npc[i]
+				if a1 == el or a2 == el then
+					if IsEntityDead(el) then
+						if n == #self.MissionData[self.Citizenid].Npc then
+							QBCore.Functions.Notify("Take The vehicle and deliver the cargo")
+							Missions:FinalStep()
+							while c do
+								Wait(0)
+								DrawMarkers(
+									self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].END_MISSION_COORDS.coords
+								)
+								if not c then
+									break
+								end
+							end
+						end
+						n = n + 1
+					end
+				end
+			end
+		end)
+	end
 end
 
 function Missions:FinalStep()

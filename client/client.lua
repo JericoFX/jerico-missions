@@ -1,14 +1,15 @@
 local Missions = {}
+local numb = 1
 setmetatable(Missions, self)
 local CurrentMission = {}
 function Missions:Init(id, cid, data)
-	QBCore.Functions.TriggerCallback("jerico-missions:server:GetRID",function(rid) 
-	if not rid == data then
-			QBCore.Functions.Notify("RID doesn`t match posible exploit", "error")	
-		return
-	end
-	end,data)
-	
+	QBCore.Functions.TriggerCallback("jerico-missions:server:GetRID", function(rid)
+		if not rid == data then
+			QBCore.Functions.Notify("RID doesn`t match posible exploit", "error")
+			return
+		end
+	end, data)
+
 	local p = promise.new()
 	local Player = QBCore.Functions.GetPlayerData().citizenid
 	self.__index = self
@@ -22,7 +23,7 @@ function Missions:Init(id, cid, data)
 	if not self.MissionData[self.Citizenid] then
 		self.MissionData[self.Citizenid] = {}
 	end
-
+	self.MissionData[self.Citizenid].Chance = 1
 	self.MissionData[self.Citizenid] = Config.Missions[id]
 	self.MissionData[self.Citizenid].Type = "FIXED"
 	if self.MissionData[self.Citizenid].IS_MOVABLE then
@@ -104,9 +105,7 @@ function Missions:TempBlip()
 	AddTextComponentString(self.MissionData[self.Citizenid].NAME)
 	EndTextCommandSetBlipName(self.MissionData[self.Citizenid].Temp_blip)
 end
-local n = 1
-local Num = 1
-local chance = math.random(n, Num)
+
 function Missions:SpawnPeds()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
@@ -148,7 +147,7 @@ function Missions:SpawnPeds()
 			TriggerEvent("vehiclekeys:client:SetOwner", self.MissionData[self.Citizenid].Vehicle.Plate)
 			self.MissionData[self.Citizenid].Npc[#self.MissionData[self.Citizenid].Npc + 1] = Ped
 			Wait(100)
-			Num = #self.MissionData[self.Citizenid].Npc
+			self.MissionData[self.Citizenid].Chance = math.random(0, #self.MissionData[self.Citizenid].Npc)
 		end
 	else
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
@@ -183,7 +182,8 @@ function Missions:SpawnPeds()
 						icon = "fas fa-sack-dollar",
 						label = "Search Keys",
 						action = function(_)
-							TriggerServerEvent("n", 1)
+							exports["qb-target"]:RemoveTargetEntity(_, "Search Keys")
+							Missions:GetVehicleKeys()
 						end,
 						canInteract = function(entity)
 							if IsEntityAPed(entity) then
@@ -196,6 +196,30 @@ function Missions:SpawnPeds()
 			})
 			TaskCombatPed(Ped, self.MissionData[self.Citizenid].PlayerPed, 0, 16)
 			self.MissionData[self.Citizenid].Npc[#self.MissionData[self.Citizenid].Npc + 1] = Ped
+			self.MissionData[self.Citizenid].Chance = math.random(0, #self.MissionData[self.Citizenid].Npc + 1)
+		end
+	end
+end
+
+function Missions:GetVehicleKeys()
+	print(self.MissionData[self.Citizenid].Chance, numb)
+	if self.MissionData then
+		if self.MissionData[self.Citizenid] then
+			if DoesEntityExist(self.MissionData[self.Citizenid].Vehicle.ID) then
+				if self.MissionData[self.Citizenid].PlayerPed == PlayerPedId() then
+					if numb == self.MissionData[self.Citizenid].Chance then
+						QBCore.Functions.Notify("You Found the key!", "success", 3000)
+						TriggerEvent("vehiclekeys:client:SetOwner", self.MissionData[self.Citizenid].Vehicle.Plate)
+						for i = 1, #self.MissionData[self.Citizenid].Npc do
+							local el = self.MissionData[self.Citizenid].Npc[i]
+							exports["qb-target"]:RemoveTargetEntity(el, "Search Keys")
+						end
+					else
+						QBCore.Functions.Notify("This person doesn´t have the key", "error", 3000)
+						numb = numb + 1
+					end
+				end
+			end
 		end
 	end
 end
@@ -438,8 +462,6 @@ end)
 
 AddEventHandler("gameEventTriggered", function(name, args)
 	if name == "CEventNetworkEntityDamage" then
-		Missions:HandlePedsMovable(args[1], args[2])
-	else
-		print(json.encode(name, { indent = true }), json.encode(args, { indent = true }))
+		Missions:HandlePedsMovable(args[1], args[2]) -- Checking evey time you get shot or the target vehicle
 	end
 end)

@@ -43,32 +43,11 @@ Config.Missions = {
 				[`a_f_m_fatcult_01`] = vector4(1361.37, 3103.1, 40.51, 265.25),
 				[`a_f_m_fatwhite_01`] = vector4(1405.44, 3102.1, 40.19, 118.02),
 			}
-			-- SPAWN_NPC_AT_END_OF_MISSION = false,
-			-- NPC_END_MISSION = {name = `a_f_m_fatcult_01` , coords =  vector4(1063.07, 3048.83, 41.48, 108.81)}
 ,
-			ITEMS_IN_CAR = {
-				[1] = {
-					name = "heavyarmor",
-					amount = 2,
-					info = {},
-					type = "item",
-					slot = 1,
-				},
-				[2] = {
-					name = "empty_evidence_bag",
-					amount = 10,
-					info = {},
-					type = "item",
-					slot = 2,
-				},
-				[3] = {
-					name = "police_stormram",
-					amount = 1,
-					info = {},
-					type = "item",
-					slot = 3,
-				},
-			},
+ITEMS_IN_CAR = {
+	["sandwitch"] = 3, --- Add the name as Key and the amount as Value
+	["id-card"] = 1
+	},
 			END_MISSION_COORDS = {
 				coords = vector3(1066.91, 3050.3, 41.35),
 				width = 10.2,

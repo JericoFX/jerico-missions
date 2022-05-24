@@ -1,5 +1,14 @@
 local QBCore = exports["qb-core"].GetCoreObject()
 local CurrentMission = {}
+local Chance = 1
+local random = math.random
+local function uuid()
+	local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+	return string.gsub(template, "[xy]", function(c)
+		local v = (c == "x") and random(0, 0xf) or random(8, 0xb)
+		return string.format("%x", v)
+	end)
+end
 function CheckResource()
 	return GetInvokingResource() == "jerico-missions" or GetInvokingResource() == "qb-core"
 end
@@ -48,24 +57,12 @@ QBCore.Functions.CreateCallback("jerico-missions:SB:GetMissions", function(sourc
 	end
 	cb(Data)
 end)
-local random = math.random
-local function uuid()
-	local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-	return string.gsub(template, "[xy]", function(c)
-		local v = (c == "x") and random(0, 0xf) or random(8, 0xb)
-		return string.format("%x", v)
-	end)
-end
+
 RegisterNetEvent("jerico-missions:server:CreateMission", function(id)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(src)
 	local PC = GetEntityCoords(GetPlayerPed(src))
 	local randomID = uuid()
-	-- if #(PC - Config.NPC.coords) > 3.0 then
-	-- 	print(#(PC - Config.NPC.coords))
-	-- 	print("The fuck are you?")
-	-- 	return
-	-- end
 	if CurrentMission[Player.PlayerData.citizenid] then
 		print(CurrentMission[Player.PlayerData.citizenid])
 		TriggerClientEvent("QBCore:Notify", src, "Player Already in a mission or Mission is already taken")
@@ -79,6 +76,7 @@ RegisterNetEvent("jerico-missions:server:CreateMission", function(id)
 		CurrentMission[Player.PlayerData.citizenid] = {}
 		CurrentMission[Player.PlayerData.citizenid] = Config.Missions[id.id]
 		CurrentMission[Player.PlayerData.citizenid].D = randomID
+
 		Player.Functions.SetMetaData("jerico-missions", { id = id.id, uid = randomID, taked = true })
 	end
 	Config.Missions[id.id].TAKED = true
@@ -92,7 +90,6 @@ RegisterNetEvent("jerico-missions:server:AddItemsInTrunk", function(cid, d, type
 			if meta.uid == d then
 				for k, v in pairs(CurrentMission[cid][type].ITEMS_IN_CAR) do
 					Player.Functions.AddItem(k, v)
-					--Send to discord!
 					Config.Missions[Player.PlayerData.metadata["jerico-missions"].id].TAKED = false
 					CurrentMission[cid] = nil
 					Player.Functions.SetMetaData("jerico-missions", { id = nil, uid = nil, taked = false })
@@ -104,11 +101,11 @@ RegisterNetEvent("jerico-missions:server:AddItemsInTrunk", function(cid, d, type
 	end
 end)
 
-QBCore.Functions.CreateCallback("jerico-missions:server:GetRID",function(source,cb,rid) 
-local src = source
-		local Player = QBCore.Functions.GetPlayer(src)
-		if Player.PlayerData.metadata["jerico-missions"].uid == rid then
-			cb(true)
-		end
-		cb(false)
+QBCore.Functions.CreateCallback("jerico-missions:server:GetRID", function(source, cb, rid)
+	local src = source
+	local Player = QBCore.Functions.GetPlayer(src)
+	if Player.PlayerData.metadata["jerico-missions"].uid == rid then
+		cb(true)
+	end
+	cb(false)
 end)

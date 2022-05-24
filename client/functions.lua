@@ -186,4 +186,3 @@ CreateThread(function()
 	SetBlockingOfNonTemporaryEvents(NPC, true)
 	TaskStandGuard(NPC,GetEntityCoords(NPC),180,"WORLD_VEHICLE_POLICE_BIKE")
 end)
-

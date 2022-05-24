@@ -432,5 +432,7 @@ end)
 AddEventHandler("gameEventTriggered", function(name, args)
 	if name == "CEventNetworkEntityDamage" then
 		Missions:HandlePedsMovable(args[1], args[2])
+	else
+		print(json.encode(name, { indent = true }), json.encode(args, { indent = true }))
 	end
 end)

@@ -2,13 +2,20 @@ local Missions = {}
 setmetatable(Missions, self)
 local CurrentMission = {}
 function Missions:Init(id, cid, data)
+	QBCore.Functions.TriggerCallback("jerico-missions:server:GetRID",function(rid) 
+	if not rid == data then
+			QBCore.Functions.Notify("RID doesn`t match posible exploit", "error")	
+		return
+	end
+	end,data)
+	
 	local p = promise.new()
 	local Player = QBCore.Functions.GetPlayerData().citizenid
 	self.__index = self
 	self.Id = id
 	self.Citizenid = Player
 	if not self.Citizenid == cid then
-		QBCore.Functions.Notify("Error CID doesnt match", "error")
+		QBCore.Functions.Notify("Error CID doesn't match", "error")
 		return
 	end
 	self.MissionData = {}

@@ -6,7 +6,6 @@ function Missions:Init(id, cid, data)
 	local Player = QBCore.Functions.GetPlayerData().citizenid
 	self.__index = self
 	self.Id = id
-
 	self.Citizenid = Player
 	if not self.Citizenid == cid then
 		QBCore.Functions.Notify("Error CID doesnt match", "error")
@@ -22,6 +21,7 @@ function Missions:Init(id, cid, data)
 	if self.MissionData[self.Citizenid].IS_MOVABLE then
 		self.MissionData[self.Citizenid].Type = "MOVABLE"
 	end
+	self.MissionData[self.Citizenid].Temp_blip = nil
 	self.MissionData[self.Citizenid].D = data
 	self.MissionData[self.Citizenid].Blip = nil
 	self.MissionData[self.Citizenid].Zone = nil
@@ -43,6 +43,7 @@ end
 function Missions:CreateVehicle()
 	local Player = QBCore.Functions.GetPlayerData().citizenid
 	QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
+		Missions:TempBlip()
 		while not NetworkDoesNetworkIdExist(net) do
 			Wait(1000)
 		end
@@ -56,14 +57,28 @@ function Missions:CreateVehicle()
 		)
 		CurrentMission[Player].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
 		CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
-		print("VEHICULO NPC: " .. NetworkGetEntityFromNetworkId(net))
 
-		Missions:AddBlip()
 		Missions:SpawnPeds()
-		Wait(200)
-		print("MI VEHICULO: " .. GetVehiclePedIsIn(PlayerPedId(), true))
+		Missions:AddBlip()
 	end, self.Id, self.MissionData[self.Citizenid].Type)
 end
+
+function Missions:TempBlip()
+	self.MissionData[self.Citizenid].Temp_blip = AddBlipForCoord(
+		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE
+	)
+	SetBlipSprite(self.MissionData[self.Citizenid].Temp_blip, 535)
+	SetBlipColour(self.MissionData[self.Citizenid].Temp_blip, 1)
+	SetBlipDisplay(self.MissionData[self.Citizenid].Temp_blip, 4)
+	SetBlipAlpha(self.MissionData[self.Citizenid].Temp_blip, 250)
+	SetBlipScale(self.MissionData[self.Citizenid].Temp_blip, 0.8)
+	SetBlipAsShortRange(self.MissionData[self.Citizenid].Temp_blip, false)
+	PulseBlip(self.MissionData[self.Citizenid].Temp_blip)
+	BeginTextCommandSetBlipName("STRING")
+	AddTextComponentString(self.MissionData[self.Citizenid].NAME)
+	EndTextCommandSetBlipName(self.MissionData[self.Citizenid].Temp_blip)
+end
+
 function Missions:SpawnPeds()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
@@ -156,6 +171,10 @@ end
 function Missions:AddBlip()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		if self.MissionData[self.Citizenid].Blip == nil then
+			while not DoesEntityExist(self.MissionData[self.Citizenid].Vehicle.ID) do
+				Wait(200)
+			end
+			RemoveBlip(self.MissionData[self.Citizenid].Temp_blip)
 			local blip = AddBlipForEntity(self.MissionData[self.Citizenid].Vehicle.ID)
 			SetBlipSprite(blip, 535)
 			SetBlipColour(blip, 1)
@@ -221,6 +240,7 @@ RegisterCommand("dvp", function(source, args)
 end)
 local n = 1
 local c = true
+
 function Missions:HandlePedsMovable(a1, a2)
 	CreateThread(function()
 		if self.MissionData[self.Citizenid].Vehicle.ID == a1 or self.MissionData[self.Citizenid].Vehicle.ID == a2 then

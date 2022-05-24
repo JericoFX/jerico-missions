@@ -61,11 +61,11 @@ RegisterNetEvent("jerico-missions:server:CreateMission", function(id)
 	local Player = QBCore.Functions.GetPlayer(src)
 	local PC = GetEntityCoords(GetPlayerPed(src))
 	local randomID = uuid()
-	if #(PC - Config.NPC.coords) > 3.0 then
-		print(#(PC - Config.NPC.coords))
-		print("The fuck are you?")
-		return
-	end
+	-- if #(PC - Config.NPC.coords) > 3.0 then
+	-- 	print(#(PC - Config.NPC.coords))
+	-- 	print("The fuck are you?")
+	-- 	return
+	-- end
 	if CurrentMission[Player.PlayerData.citizenid] then
 		print(CurrentMission[Player.PlayerData.citizenid])
 		TriggerClientEvent("QBCore:Notify", src, "Player Already in a mission or Mission is already taken")

@@ -103,3 +103,12 @@ RegisterNetEvent("jerico-missions:server:AddItemsInTrunk", function(cid, d, type
 		end
 	end
 end)
+
+QBCore.Functions.CreateCallback("jerico-missions:server:GetRID",function(source,cb,rid) 
+local src = source
+		local Player = QBCore.Functions.GetPlayer(src)
+		if Player.PlayerData.metadata["jerico-missions"].uid == rid then
+			cb(true)
+		end
+		cb(false)
+end)

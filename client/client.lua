@@ -2,6 +2,11 @@ local Missions = {}
 local numb = 1
 setmetatable(Missions, self)
 local CurrentMission = {}
+--- First part of the function
+---@param id number
+---@param cid string
+---@param data string
+---@return table
 function Missions:Init(id, cid, data)
 	QBCore.Functions.TriggerCallback("jerico-missions:server:GetRID", function(rid)
 		if not rid == data then
@@ -53,33 +58,35 @@ end
 function Missions:CreateVehicle()
 	local Player = QBCore.Functions.GetPlayerData().citizenid
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
-		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
-			Missions:TempBlip()
-			while not NetworkDoesNetworkIdExist(net) do
-				Wait(1000)
-			end
-			if not CurrentMission[Player] then
-				CurrentMission[Player] = {}
-				CurrentMission[Player].Vehicle = { ID = 0, Plate = "" }
-			end
-			self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
-			self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
-				self.MissionData[self.Citizenid].Vehicle.ID
-			)
-			CurrentMission[Player].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
-			CurrentMission[Player].Vehicle.Plate = GetVehicleNumberPlateText(NetworkGetEntityFromNetworkId(net))
-			Missions:SpawnPeds()
-			Missions:AddBlip()
-		end, self.Id, self.MissionData[self.Citizenid].Type, false)
+		QBCore.Functions.TriggerCallback(
+			"jerico-missions:server:SpawnVehicle",
+			function(net)
+				Missions:TempBlip()
+				while not NetworkDoesNetworkIdExist(net) do
+					Wait(1000)
+				end
+				print("existed")
+				self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+				self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
+					self.MissionData[self.Citizenid].Vehicle.ID
+				)
+				print("to players")
+				Missions:SpawnPeds()
+				Missions:AddBlip()
+				-- if self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].HAS_ESCOLT then
+				-- 	Missions:SpawnEscoltVehicle(false)
+				-- end
+			end,
+			self.Id,
+			self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_TO_SPAWN,
+			self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE
+		)
 	else
 		QBCore.Functions.TriggerCallback("jerico-missions:server:SpawnVehicle", function(net)
 			while not NetworkDoesNetworkIdExist(net) do
 				Wait(1000)
 			end
-			if not CurrentMission[Player] then
-				CurrentMission[Player] = {}
-				CurrentMission[Player].Vehicle = { ID = 0, Plate = "" }
-			end
+
 			self.MissionData[self.Citizenid].Vehicle.ID = NetworkGetEntityFromNetworkId(net)
 			self.MissionData[self.Citizenid].Vehicle.Plate = GetVehicleNumberPlateText(
 				self.MissionData[self.Citizenid].Vehicle.ID
@@ -91,6 +98,163 @@ function Missions:CreateVehicle()
 	end
 end
 
+-- function Missions:SpawnEscoltVehicle(chase)
+-- 	local found, spawnPos, spawnHeading = GetClosestVehicleNodeWithHeading(
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.x
+-- 		+ math.random(-100, 100),
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.y
+-- 		+ math.random(-100, 100),
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.z,
+-- 		0,
+-- 		3,
+-- 		0
+-- 	)
+-- 	local coordinates = vector3(spawnPos.x, spawnPos.y, spawnPos.z)
+-- 	if chase then
+-- 		QBCore.Functions.TriggerCallback(
+-- 			"jerico-missions:server:SpawnVehicle",
+-- 			function(net)
+-- 				while not NetworkDoesNetworkIdExist(net) do
+-- 					Wait(1000)
+-- 				end
+-- 				self.MissionData[self.Citizenid].Escolt_Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+-- 				self.MissionData[self.Citizenid].Escolt_Vehicle.Plate = GetVehicleNumberPlateText(
+-- 					self.MissionData[self.Citizenid].Escolt_Vehicle.ID
+-- 				)
+-- 				CurrentMission[Player].Escolt_Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+-- 				CurrentMission[Player].Escolt_Vehicle.Plate = GetVehicleNumberPlateText(
+-- 					NetworkGetEntityFromNetworkId(net)
+-- 				)
+-- 				Wait(200)
+-- 				Missions:SpawnEscoltPeds(chase)
+-- 			end,
+-- 			self.Id,
+-- 			self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_ESCOLT_SPAWN,
+-- 			coordinates
+-- 		)
+-- 	else
+-- 		print("not chase")
+-- 		QBCore.Functions.TriggerCallback(
+-- 			"jerico-missions:server:SpawnVehicle",
+-- 			function(net)
+-- 				while not NetworkDoesNetworkIdExist(net) do
+-- 					Wait(1000)
+-- 				end
+-- 				self.MissionData[self.Citizenid].Escolt_Vehicle.ID = NetworkGetEntityFromNetworkId(net)
+-- 				self.MissionData[self.Citizenid].Escolt_Vehicle.Plate = GetVehicleNumberPlateText(
+-- 					self.MissionData[self.Citizenid].Escolt_Vehicle.ID
+-- 				)
+-- 				print(self.MissionData[self.Citizenid].Escolt_Vehicle.IsD, net)
+-- 				Wait(200)
+-- 				Missions:SpawnEscoltPeds(chase)
+-- 			end,
+-- 			self.Id,
+-- 			self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_ESCOLT_SPAWN,
+-- 			coordinates
+-- 		)
+-- 	end
+-- end
+-- function Missions:SpawnEscoltPeds(chase)
+-- 	if chase then
+-- 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC_IN_ESCOLT_VEHICLE) do
+-- 			print("DOne?")
+-- 			RequestModel(k)
+-- 			while not HasModelLoaded(k) do
+-- 				Wait(100)
+-- 				print("loading?")
+-- 			end
+-- 			local Ped = CreatePedInsideVehicle(
+-- 				self.MissionData[self.Citizenid].Escolt_Vehicle.ID,
+-- 				1,
+-- 				k,
+-- 				v,
+-- 				true,
+-- 				false
+-- 			)
+-- 			NetworkRegisterEntityAsNetworked(Ped)
+-- 			SetNetworkIdCanMigrate(NetworkGetNetworkIdFromEntity(Ped), true)
+-- 			SetNetworkIdExistsOnAllMachines(NetworkGetNetworkIdFromEntity(Ped), true)
+-- 			GiveWeaponToPed(Ped, GetHashKey("WEAPON_SMG"), 1, false, true)
+-- 			SetPedRelationshipGroupDefaultHash(Ped, GetHashKey("COP"))
+-- 			SetPedRelationshipGroupHash(Ped, GetHashKey("COP"))
+-- 			SetPedAsCop(Ped, true)
+-- 			SetEntityCanBeDamagedByRelationshipGroup(Ped, true, grouphash)
+-- 			SetPedFleeAttributes(Ped, 0, false)
+-- 			SetPedCombatAttributes(Ped, 46, 1)
+-- 			SetPedCombatAbility(Ped, 100)
+-- 			SetPedCombatMovement(Ped, 2)
+-- 			SetPedCombatRange(Ped, 3)
+-- 			SetPedKeepTask(Ped, true)
+-- 			SetPedDropsWeaponsWhenDead(Ped, false)
+-- 			SetPedArmour(Ped, 100)
+-- 			SetPedAccuracy(Ped, 60)
+-- 			SetEntityInvincible(Ped, false)
+-- 			SetPedAlertness(Ped, 3)
+-- 			SetPedAllowedToDuck(Ped, true)
+-- 			SetAllRandomPedsFlee(Ped, false)
+-- 			SetPedCanCowerInCover(Ped, true)
+-- 			Wait(200)
+-- 			TaskVehicleChase(
+-- 				GetPedInVehicleSeat(self.MissionData[self.Citizenid].Escolt_Vehicle.ID, -1),
+-- 				self.MissionData[self.Citizenid].PlayerPedId
+-- 			)
+-- 			self.MissionData[self.Citizenid].Escolt_Npc[#self.MissionData[self.Citizenid].Escolt_Npc + 1] = Ped
+-- 		end
+-- 	else
+-- 		if DoesEntityExist(self.MissionData[self.Citizenid].Escolt_Vehicle.ID) then
+-- 			for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC_IN_ESCOLT_VEHICLE) do
+-- 				print(k, v)
+-- 				RequestModel(k)
+-- 				while not HasModelLoaded(k) do
+-- 					Wait(100)
+-- 					print("loading?")
+-- 				end
+-- 				local Ped = CreatePedInsideVehicle(
+-- 					self.MissionData[self.Citizenid].Escolt_Vehicle.ID,
+-- 					1,
+-- 					k,
+-- 					v,
+-- 					true,
+-- 					false
+-- 				)
+-- 				NetworkRegisterEntityAsNetworked(Ped)
+-- 				SetNetworkIdCanMigrate(NetworkGetNetworkIdFromEntity(Ped), true)
+-- 				SetNetworkIdExistsOnAllMachines(NetworkGetNetworkIdFromEntity(Ped), true)
+-- 				GiveWeaponToPed(Ped, GetHashKey("WEAPON_SMG"), 1, false, true)
+-- 				SetPedRelationshipGroupDefaultHash(Ped, GetHashKey("COP"))
+-- 				SetPedRelationshipGroupHash(Ped, GetHashKey("COP"))
+-- 				SetPedAsCop(Ped, true)
+-- 				SetEntityCanBeDamagedByRelationshipGroup(Ped, true, grouphash)
+-- 				SetPedFleeAttributes(Ped, 0, false)
+-- 				SetPedCombatAttributes(Ped, 46, 1)
+-- 				SetPedCombatAbility(Ped, 100)
+-- 				SetPedCombatMovement(Ped, 2)
+-- 				SetPedCombatRange(Ped, 3)
+-- 				SetPedKeepTask(Ped, true)
+-- 				SetPedDropsWeaponsWhenDead(Ped, false)
+-- 				SetPedArmour(Ped, 100)
+-- 				SetPedAccuracy(Ped, 60)
+-- 				SetEntityInvincible(Ped, false)
+-- 				SetPedAlertness(Ped, 3)
+-- 				SetPedAllowedToDuck(Ped, true)
+-- 				SetAllRandomPedsFlee(Ped, false)
+-- 				SetPedCanCowerInCover(Ped, true)
+-- 				Wait(200)
+-- 				TaskVehicleEscort(
+-- 					GetPedInVehicleSeat(self.MissionData[self.Citizenid].Escolt_Vehicle.ID, -1),
+-- 					self.MissionData[self.Citizenid].Escolt_Vehicle.ID,
+-- 					self.MissionData[self.Citizenid].Vehicle.ID,
+-- 					-1,
+-- 					95.0,
+-- 					536871740,
+-- 					5.0,
+-- 					1.0,
+-- 					1.0
+-- 				)
+-- 			end
+-- 		end
+-- 	end
+-- end
 function Missions:TempBlip()
 	self.MissionData[self.Citizenid].Temp_blip = AddBlipForCoord(
 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE
@@ -110,7 +274,6 @@ end
 function Missions:SpawnPeds()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
 		for k, v in pairs(self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].NPC) do
-			print("DOne?")
 			RequestModel(k)
 			while not HasModelLoaded(k) do
 				Wait(100)
@@ -225,6 +388,7 @@ function Missions:GetVehicleKeys()
 		end
 	end
 end
+
 ---@public
 function Missions:AddBlip()
 	if self.MissionData[self.Citizenid].Type == "MOVABLE" then
@@ -270,12 +434,19 @@ function Missions:AddBlip()
 	end
 end
 
-function Missions:Data()
-	print(self.MissionData[self.Citizenid].Vehicle.ID, GetVehiclePedIsIn(self.MissionData[self.Citizenid].PlayerPed))
-end
-RegisterCommand("asd", function(source, args)
-	Missions:Data()
-end)
+-- function Missions:Data()
+-- 	local found, spawnPos, spawnHeading = GetClosestVehicleNodeWithHeading(
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.x
+-- 		+ math.random(-100, 100),
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.y
+-- 		+ math.random(-100, 100),
+-- 		self.MissionData[self.Citizenid][self.MissionData[self.Citizenid].Type].VEHICLE_COORDINATE.z,
+-- 		0,
+-- 		3,
+-- 		0
+-- 	)
+-- 	local coordinates = vector3(spawnPos.x, spawnPos.y, spawnPos.z)
+-- end
 RegisterNetEvent("jerico-missions:client:CreateMissionConfig", function(ID, citizenid, cid)
 	if cid == nil or cid == "" then
 		print("Exploit?")
@@ -309,13 +480,11 @@ local c = true
 function Missions:HandlePedsMovable(a1, a2)
 	if self.MissionData then
 		CreateThread(function()
-			if
-				self.MissionData[self.Citizenid].Vehicle.ID == a1
-				or self.MissionData[self.Citizenid].Vehicle.ID == a2
+			if self.MissionData[self.Citizenid].Vehicle.ID == a1
+					or self.MissionData[self.Citizenid].Vehicle.ID == a2
 			then
-				if
-					GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 750.0
-					and GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) >= 800.0
+				if GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) <= 750.0
+						and GetVehicleBodyHealth(self.MissionData[self.Citizenid].Vehicle.ID) >= 800.0
 				then
 					SetDriveTaskDrivingStyle(
 						GetPedInVehicleSeat(self.MissionData[self.Citizenid].Vehicle.ID, -1),
@@ -374,15 +543,12 @@ function Missions:FinalStep()
 			{
 				name = math.random(1000, 9999),
 				heading = 0,
-				debugPoly = true,
+				debugPoly = false,
 			}
 		)
 		self.MissionData[self.Citizenid].Zone:onPointInOut(PolyZone.getPlayerPosition, function(isPointInside, point)
 			if isPointInside then
-				if
-					GetVehiclePedIsIn(self.MissionData[self.Citizenid].PlayerPed, true)
-					== self.MissionData[self.Citizenid].Vehicle.ID
-				then
+				if GetVehiclePedIsIn(self.MissionData[self.Citizenid].PlayerPed, true) == self.MissionData[self.Citizenid].Vehicle.ID then
 					Wait(500)
 					QBCore.Functions.Notify("Grab the items in the back of the vehicle", "success", 3000)
 					FreezeEntityPosition(self.MissionData[self.Citizenid].Vehicle.ID, true)
@@ -398,64 +564,65 @@ function Missions:FinalStep()
 						0.0
 					)
 					local Distance = #(GetEntityCoords(self.MissionData[self.Citizenid].PlayerPed - Trunk))
+					CreateThread(function()
+						while b do
+							Wait(0)
+							if Distance < 1.0 then
+								QBCore.Functions.DrawText3D(Trunk.x, Trunk.y, Trunk.z, "Press G to grab the items")
+								if IsControlJustReleased(0, 47) then
+									c = false
+									QBCore.Functions.Progressbar(
+										"TakeMissionCargo",
+										"Taking Items ..",
+										math.random(4000, 6000),
+										false,
+										true,
+										{
+											disableMovement = true,
+											disableCarMovement = true,
+											disableMouse = true,
+											disableCombat = true,
+										},
+										{},
+										{},
+										{},
 
-					while b do
-						Wait(0)
-						if Distance < 1.0 then
-							QBCore.Functions.DrawText3D(Trunk.x, Trunk.y, Trunk.z, "Press G to grab the items")
-							if IsControlJustReleased(0, 47) then
-								c = false
-								QBCore.Functions.Progressbar(
-									"TakeMissionCargo",
-									"Taking Items ..",
-									math.random(4000, 6000),
-									false,
-									true,
-									{
-										disableMovement = true,
-										disableCarMovement = true,
-										disableMouse = true,
-										disableCombat = true,
-									},
-									{},
-									{},
-									{},
-
-									function()
-										ClearPedTasks(PlayerPedId())
-										TriggerServerEvent(
-											"jerico-missions:server:AddItemsInTrunk",
-											self.Citizenid,
-											self.MissionData[self.Citizenid].D,
-											self.MissionData[self.Citizenid].Type,
-											self.MissionData[self.Citizenid].Vehicle.Plate
-										)
-										Missions:Delete()
-										self.MissionData[self.Citizenid].Zone:destroy()
-										self.MissionData[self.Citizenid] = nil
-										b = false
-									end,
-									function()
-										ClearPedTasks(PlayerPedId())
-										self.MissionData[self.Citizenid].Zone:destroy()
-										self.MissionData[self.Citizenid] = nil
-										b = false
-										Missions:Delete()
-									end
-								)
+										function()
+											ClearPedTasks(PlayerPedId())
+											TriggerServerEvent(
+												"jerico-missions:server:AddItemsInTrunk",
+												self.Citizenid,
+												self.MissionData[self.Citizenid].D,
+												self.MissionData[self.Citizenid].Type,
+												self.MissionData[self.Citizenid].Vehicle.Plate
+											)
+											Missions:Delete()
+											self.MissionData[self.Citizenid].Zone:destroy()
+											self.MissionData[self.Citizenid] = nil
+											b = false
+										end,
+										function()
+											ClearPedTasks(PlayerPedId())
+											self.MissionData[self.Citizenid].Zone:destroy()
+											self.MissionData[self.Citizenid] = nil
+											b = false
+											Missions:Delete()
+										end
+									)
+								end
+							end
+							if not b then
+								break
 							end
 						end
-						if not b then
-							break
-						end
-					end
-
+					end)
 					--Types: success,primary,error,police,ambulance
 				end
 			end
 		end)
 	end
 end
+
 function Missions:Delete()
 	if self.MissionData then
 		if self.MissionData[self.Citizenid] then

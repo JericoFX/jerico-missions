@@ -15,8 +15,12 @@ Config.Missions = {
 			VEHICLE_TO_SPAWN = "burrito3", -- Hash of the vehicle to spawn
 			VEHICLE_COORDINATE = vector3(2351.85, 3133.65, 48.2), -- Coordinate ov the vehicle to spawn
 			HAS_ESCOLT = true, -- The spawn vehicle will have a escolt car?
-			VEHICLE_ESCOLT_SPAWN = `adder`, -- if the above is true, this car will spawn and follow the car above.
-			AMOUNT_ESCOLT_NPC_IN_VEHICLE = 3, -- How much NPC's beside the driver will spawn in the car?.
+			VEHICLE_ESCOLT_SPAWN = "adder", -- if the above is true, this car will spawn and follow the car above.
+			NPC_IN_ESCOLT_VEHICLE = {
+				[`a_f_m_fatbla_01`] =  -1, -- Driver Seat
+				[`a_f_m_fatcult_01`] = 0, --
+				[`a_f_m_fatwhite_01`] = 1 --
+			}, -- How much NPC's beside the driver will spawn in the car?.
 			NPC = {
 				[`a_f_m_fatbla_01`] =  -1, -- Driver Seat
 				[`a_f_m_fatcult_01`] = 0, --

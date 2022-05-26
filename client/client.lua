@@ -455,25 +455,7 @@ RegisterNetEvent("jerico-missions:client:CreateMissionConfig", function(ID, citi
 	Missions:Init(ID, citizenid, cid)
 end)
 
-CreateThread(function()
-	Wait(200)
-	local _, hash = GetCurrentPedWeapon(PlayerPedId(), true)
-	SetPedInfiniteAmmo(PlayerPedId(), hash)
-end)
 
-RegisterCommand("dvp", function(source, args)
-	local Peds = QBCore.Functions.GetPeds()
-	local Veh = QBCore.Functions.GetVehicles()
-	for i = 1, #Veh do
-		local el = Veh[i]
-		DeleteEntity(el)
-	end
-
-	for k, _ in ipairs(Peds) do
-		local el = Peds[k]
-		DeleteEntity(el)
-	end
-end)
 local n = 1
 local c = true
 
@@ -650,5 +632,4 @@ AddEventHandler("gameEventTriggered", function(name, args)
 		Missions:HandlePedsMovable(args[1], args[2]) -- Checking evey time you get shot or the target vehicle
 	end
 	-- Print on the server console a table
-	QBCore.Debug({ name, args })
 end)

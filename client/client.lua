@@ -447,6 +447,20 @@ end
 -- 	)
 -- 	local coordinates = vector3(spawnPos.x, spawnPos.y, spawnPos.z)
 -- end
+RegisterCommand("dvp", function(source, args)
+	local Peds = QBCore.Functions.GetPeds()
+	local Veh = QBCore.Functions.GetVehicles()
+	for i = 1, #Veh do
+		local el = Veh[i]
+		DeleteEntity(el)
+	end
+
+	for k, _ in ipairs(Peds) do
+		local el = Peds[k]
+		DeleteEntity(el)
+	end
+end, true)
+
 RegisterNetEvent("jerico-missions:client:CreateMissionConfig", function(ID, citizenid, cid)
 	if cid == nil or cid == "" then
 		print("Exploit?")
@@ -625,6 +639,9 @@ AddEventHandler("onResourceStop", function(resource)
 	end
 	collectgarbage()
 	Missions:Delete()
+	if NPC then
+		DeletePed(NPC)
+	end
 end)
 
 AddEventHandler("gameEventTriggered", function(name, args)

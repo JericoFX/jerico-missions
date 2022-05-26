@@ -9,9 +9,11 @@ local function uuid()
 		return string.format("%x", v)
 	end)
 end
+
 function CheckResource()
 	return GetInvokingResource() == "jerico-missions" or GetInvokingResource() == "qb-core"
 end
+
 QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(source, cb, id, vehicle, coords)
 	if not CheckResource() then
 		print("WHAT HAPPEND")
@@ -32,7 +34,7 @@ QBCore.Functions.CreateCallback("jerico-missions:server:SpawnVehicle", function(
 		if DoesEntityExist(v) then
 			CurrentMission[Player].Vehicle = v
 			local netIdV = NetworkGetNetworkIdFromEntity(v)
-	print("sending: "..netIdV )
+			print("sending: " .. netIdV)
 			cb(netIdV)
 		else
 			cb(0)
@@ -48,7 +50,6 @@ QBCore.Functions.CreateCallback("jerico-missions:SB:GetMissions", function(sourc
 		local el = Config.Missions[k]
 		if not el.TAKED then
 			Data[#Data + 1] = { name = el.NAME, id = k }
-			el.TAKED = true
 		else
 			Data[#Data + 1] = { name = "No Mission Available", id = nil }
 		end
